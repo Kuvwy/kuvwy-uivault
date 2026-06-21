@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>UI Vault | Free & Premium Website Templates & UI Components</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&family=Playfair+Display:ital,wght@0,700;0,900;1,700;1,900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    section[hidden], div[hidden] { display: none !important; }
+
+    .detail-view { max-width:1200px;margin:0 auto;padding:40px 20px 80px;animation:fadeIn 0.5s ease forwards; }
+    .detail-container { background:#ffffff;border-radius:14px;border:1px solid #e4e4e7;box-shadow:0 8px 24px rgba(0,0,0,0.08);overflow:hidden; }
+    .back-btn { display:inline-flex;align-items:center;gap:8px;padding:12px 20px;font-size:0.9rem;font-weight:600;color:#65676b;background:transparent;margin:20px 20px 0;border:none;cursor:pointer;transition:transform 0.2s; }
+    .back-btn:hover { transform:translateX(-4px);color:#050505; }
+    .detail-content { padding:30px 24px; }
+    @media (min-width:900px) {
+      .detail-content { display:grid;grid-template-columns:1.5fr 1fr;gap:64px;padding:48px;align-items:start; }
+      .back-btn { margin:32px 48px 0; }
+    }
+    .detail-badges { display:flex;gap:10px;margin-bottom:20px; }
+    .detail-title { font-family:'Playfair Display',serif;font-size:clamp(2rem,5vw,3rem);font-weight:700;color:#050505;margin-bottom:16px;line-height:1.1;letter-spacing:-0.03em; }
+    .detail-desc { font-size:1.1rem;color:#65676b;line-height:1.7;margin-bottom:32px;max-width:600px; }
+    .detail-actions { display:flex;flex-wrap:wrap;gap:12px;margin-bottom:40px;padding-bottom:30px;border-bottom:1px solid #e4e4e7; }
+    .btn-buy { padding:14px 28px;border-radius:10px;background:#050505;color:#fff;font-weight:600;border:none;cursor:pointer;transition:all 0.2s; }
+    .btn-buy:hover { background:#d97706;transform:translateY(-2px); }
+    .detail-features h3 { font-size:0.8rem;text-transform:uppercase;letter-spacing:0.1em;color:#b0b3b8;font-weight:700;margin-bottom:20px; }
+    .detail-features ul { list-style:none;padding:0; }
+    .detail-features li { padding-left:28px;margin-bottom:12px;color:#050505;position:relative;font-weight:500; }
+    .detail-features li::before { content:'✓';position:absolute;left:0;color:#d97706;font-weight:bold; }
+
+    @media (max-width:768px) {
+      .detail-actions { position:fixed;bottom:0;left:0;right:0;background:#ffffff;padding:16px 24px 24px;margin:0;border-top:1px solid #e4e4e7;box-shadow:0 -4px 12px rgba(0,0,0,0.05);z-index:900;display:flex;flex-direction:column;gap:10px; }
+      .btn-buy,.btn-primary,.btn-secondary { width:100%;justify-content:center;font-size:1rem;padding:14px;border-radius:10px; }
+      .detail-view { padding-bottom:140px !important; }
+      .template-card .card-image { width:100% !important;aspect-ratio:1/1 !important;height:auto !important;background:var(--bg-secondary);object-fit:cover;border-bottom:1px solid var(--border); }
+      .template-card .card-body { padding:8px 12px !important;display:flex;flex-direction:column;gap:4px;flex:1;min-height:0; }
+      .template-card .card-title { font-size:0.9rem !important;margin:0 !important;line-height:1.2 !important; }
+      .template-card .card-meta { margin-bottom:4px !important; }
+      .template-card .card-description { display:none !important; }
+    }
+
+    /* ===== YOUR PROFILE PANEL ===== */
+    .profile-modal { position:fixed;inset:0;z-index:10000;display:flex;align-items:flex-end;justify-content:center; }
+    .profile-modal[hidden] { display:none !important; }
+    .profile-backdrop { position:absolute;inset:0;background:rgba(5,5,5,0.55);backdrop-filter:blur(4px); }
+    .profile-box { position:relative;background:#ffffff;border-radius:20px 20px 0 0;border:1px solid #e4e4e7;box-shadow:0 -8px 40px rgba(0,0,0,0.15);width:100%;max-width:560px;max-height:85vh;display:flex;flex-direction:column;animation:profileSlideUp 0.35s cubic-bezier(0.16,1,0.3,1) forwards; }
+    @keyframes profileSlideUp { from{opacity:0;transform:translateY(40px)}to{opacity:1;transform:translateY(0)} }
+    .profile-header { display:flex;align-items:center;justify-content:space-between;padding:20px 24px 16px;border-bottom:1px solid #e4e4e7;flex-shrink:0; }
+    .profile-header h2 { font-family:'DM Sans',sans-serif;font-size:1.05rem;font-weight:700;color:#050505;margin:0; }
+    .profile-header-actions { display:flex;align-items:center;gap:10px; }
+    .profile-close { background:none;border:none;font-size:1.5rem;color:#b0b3b8;cursor:pointer;padding:4px;line-height:1; }
+    .profile-close:hover { color:#050505; }
+    .btn-refresh { background:none;border:1.5px solid #e4e4e7;border-radius:8px;padding:6px 12px;font-family:'DM Sans',sans-serif;font-size:0.8rem;font-weight:600;color:#65676b;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;gap:5px; }
+    .btn-refresh:hover { border-color:#d97706;color:#d97706; }
+    .btn-refresh:disabled { opacity:0.5;cursor:not-allowed; }
+    .profile-user-info { padding:16px 24px;background:#f9f9f9;border-bottom:1px solid #e4e4e7;flex-shrink:0; }
+    .profile-email { font-size:0.85rem;font-weight:600;color:#050505;margin:0 0 2px; }
+    .profile-member { font-size:0.78rem;color:#b0b3b8;margin:0; }
+    .profile-section-title { padding:16px 24px 8px;font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:#b0b3b8;flex-shrink:0; }
+    .profile-list { overflow-y:auto;flex:1;padding:0 24px 16px; }
+    .profile-empty { text-align:center;padding:48px 20px;color:#b0b3b8;font-size:0.9rem;line-height:1.6; }
+    .profile-empty-icon { margin-bottom:12px;display:flex;justify-content:center; }
+    .profile-item { display:flex;align-items:center;gap:14px;padding:12px 0;border-bottom:1px solid #f4f4f5;cursor:pointer;transition:opacity 0.2s; }
+    .profile-item:last-child { border-bottom:none; }
+    .profile-item:hover { opacity:0.7; }
+    .profile-thumb { width:52px;height:52px;border-radius:8px;border:1px solid #e4e4e7;flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center; }
+    .profile-thumb img { width:100%;height:100%;object-fit:cover; }
+    .profile-thumb-placeholder { font-family:'DM Mono',monospace;font-size:0.55rem;color:#d97706;text-transform:uppercase;letter-spacing:0.05em;text-align:center;padding:4px; }
+    .profile-item-info { flex:1;min-width:0; }
+    .profile-item-title { font-size:0.9rem;font-weight:600;color:#050505;margin:0 0 3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+    .profile-item-meta { font-size:0.78rem;color:#b0b3b8; }
+    .profile-owned-badge { font-size:0.68rem;font-weight:700;padding:3px 8px;border-radius:20px;background:#050505;color:#fff;flex-shrink:0;letter-spacing:0.05em; }
+    .profile-footer { padding:16px 24px 28px;border-top:1px solid #e4e4e7;flex-shrink:0; }
+    .btn-logout { width:100%;padding:13px;border-radius:10px;background:#fef2f2;color:#e11d48;font-family:'DM Sans',sans-serif;font-size:0.9rem;font-weight:600;border:1.5px solid #fecdd3;cursor:pointer;transition:all 0.2s; }
+    .btn-logout:hover { background:#e11d48;color:#fff; }
+
+    /* ===== AUTH MODAL ===== */
+    html,body { background-color:#ffffff !important;color:#050505 !important; }
+    .auth-modal { position:fixed;inset:0;z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px; }
+    .auth-modal[hidden] { display:none !important; }
+    .auth-backdrop { position:absolute;inset:0;background:rgba(5,5,5,0.55);backdrop-filter:blur(4px); }
+    .auth-box { position:relative;background:#ffffff;border-radius:18px;border:1px solid #e4e4e7;box-shadow:0 24px 60px rgba(0,0,0,0.15);width:100%;max-width:420px;padding:36px 32px 32px;animation:authSlideUp 0.3s cubic-bezier(0.16,1,0.3,1) forwards; }
+    @keyframes authSlideUp { from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)} }
+    .auth-close { position:absolute;top:16px;right:18px;background:none;border:none;font-size:1.6rem;color:#b0b3b8;cursor:pointer;line-height:1;padding:4px;transition:color 0.2s; }
+    .auth-close:hover { color:#050505; }
+    .auth-logo { display:flex;align-items:center;gap:8px;font-family:'DM Sans',sans-serif;font-weight:600;font-size:0.95rem;color:#050505;margin-bottom:24px; }
+    .auth-logo .logo-dot { width:8px;height:8px;border-radius:50%;background:#d97706;display:inline-block;flex-shrink:0; }
+    .auth-tabs { display:flex;background:#f4f4f5;border-radius:10px;padding:4px;gap:4px;margin-bottom:28px; }
+    .auth-tab { flex:1;padding:9px;border:none;border-radius:7px;background:transparent;font-family:'DM Sans',sans-serif;font-size:0.88rem;font-weight:500;color:#65676b;cursor:pointer;transition:all 0.2s; }
+    .auth-tab.active { background:#ffffff;color:#050505;font-weight:600;box-shadow:0 1px 4px rgba(0,0,0,0.1); }
+    .auth-subtitle { font-size:0.9rem;color:#65676b;margin-bottom:20px;line-height:1.5; }
+    .auth-label { display:block;font-size:0.82rem;font-weight:600;color:#050505;margin-bottom:6px;letter-spacing:0.02em; }
+    .auth-input { width:100%;padding:12px 14px;border:1.5px solid #e4e4e7;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:0.95rem;color:#050505;background:#fafafa;outline:none;transition:border-color 0.2s,box-shadow 0.2s;margin-bottom:16px;box-sizing:border-box; }
+    .auth-input:focus { border-color:#d97706;box-shadow:0 0 0 3px rgba(217,119,6,0.1);background:#fff; }
+    .auth-password-wrap { position:relative;margin-bottom:16px; }
+    .auth-password-wrap .auth-input { margin-bottom:0;padding-right:44px; }
+    .eye-btn { position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#b0b3b8;padding:4px;display:flex;align-items:center;transition:color 0.2s; }
+    .eye-btn:hover { color:#050505; }
+    .auth-error { font-size:0.83rem;color:#e11d48;background:#fef2f2;border-radius:8px;padding:10px 12px;margin-bottom:12px;line-height:1.4; }
+    .auth-error[hidden] { display:none !important; }
+    .auth-submit { width:100%;padding:14px;border-radius:10px;background:#050505;color:#fff;font-family:'DM Sans',sans-serif;font-size:0.95rem;font-weight:600;border:none;cursor:pointer;transition:background 0.2s,transform 0.15s;margin-bottom:16px; }
+    .auth-submit:hover { background:#d97706;transform:translateY(-1px); }
+    .auth-submit:disabled { background:#b0b3b8;cursor:not-allowed;transform:none; }
+    .auth-switch { text-align:center;font-size:0.85rem;color:#65676b; }
+    .auth-switch-link { color:#d97706;font-weight:600;cursor:pointer;text-decoration:underline; }
+    @keyframes blink-animation { 0%{opacity:1}50%{opacity:0.5}100%{opacity:1} }
+    @keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+  </style>
+</head>
+<body>
+
+  <!-- ===== HEADER ===== -->
+  <header class="site-header">
+    <div class="header-inner">
+      <p class="logo"><span class="logo-dot"></span>UIVault by Kuvwy</p>
+      <nav class="nav-links">
+        <a href="#" id="navFree">Free UI Resources</a>
+        <a href="#" id="navPremium">Premium UI Resources</a>
+        <a href="#" id="navAbout">About Us</a>
+        <a href="#" id="navProfile" style="display:none;color:#d97706;font-weight:600;">Your Profile</a>
+      </nav>
+      <button class="hamburger" id="hamburger" aria-label="Toggle menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+    <div class="mobile-nav" id="mobileNav">
+      <a href="#" id="mobileNavFree">Free UI Resources</a>
+      <a href="#" id="mobileNavPremium">Premium UI Resources</a>
+      <a href="#" id="mobileNavAbout">About Us</a>
+      <a href="#" id="mobileNavProfile" style="display:none;color:#d97706;font-weight:600;">Your Profile</a>
+    </div>
+  </header>
+
+  <!-- ===== SEARCH / HERO ===== -->
+  <section class="search-zone">
+    <div class="hero-text">
+      <p class="hero-tag">Open-source ready</p>
+      <h1>Build Better <br /><span class="accent">Website</span><br>Faster</h1>
+      <p class="hero-sub">Explore free and premium website templates and UI components for SaaS, e-commerce, dashboards, portfolios, and more.</p>
+    </div>
+    <div class="search-wrapper">
+      <span class="search-icon">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      </span>
+      <input type="text" id="searchInput" class="search-input" placeholder="Search templates e.g. dashboard, portfolio" autocomplete="off" spellcheck="false" />
+      <span class="search-shortcut">LIVE</span>
+    </div>
+    <div class="filter-bar">
+      <button class="filter-btn active" data-filter="all">All</button>
+      <button class="filter-btn" data-filter="landing">Landing</button>
+      <button class="filter-btn" data-filter="dashboard">Dashboard</button>
+      <button class="filter-btn" data-filter="portfolio">Portfolio</button>
+      <button class="filter-btn" data-filter="saas">SaaS</button>
+      <button class="filter-btn" data-filter="ecommerce">E-commerce</button>
+      <button class="filter-btn" data-filter="free">Free Only</button>
+      <button class="filter-btn" data-filter="premium">Premium Only</button>
+    </div>
+  </section>
+  <!-- ===== GRID ===== -->
+  <main class="grid-container">
+    <div class="results-meta">
+      <p id="resultsCount">Showing <strong>0</strong> UI resources</p>
+    </div>
+    <div class="section-label" id="freeSectionLabel" hidden>
+      <h2 class="section-title" id="freeSection">Free UI Resources</h2>
+    </div>
+    <div class="template-grid" id="freeGrid"></div>
+    <div class="section-label" id="premiumSectionLabel" hidden>
+      <h2 class="section-title premium" id="premiumSection">Premium UI Resources</h2>
+    </div>
+    <div class="template-grid" id="premiumGrid"></div>
+    <div class="empty-state" id="emptyState" hidden>
+      <p class="empty-icon">— 404 —</p>
+      <p class="empty-msg">No templates or components found <span id="emptyTerm"></span></p>
+      <p class="empty-sub">Try a different keyword or clear the search.</p>
+    </div>
+  </main>
+
+  <!-- ===== TEMPLATE DETAIL VIEW ===== -->
+  <section id="templateDetailView" class="detail-view" hidden>
+    <div class="detail-container">
+      <button id="backToGridBtn" class="back-btn">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+        Back to Templates
+      </button>
+      <div class="detail-content">
+        <div class="detail-header">
+          <div class="detail-badges">
+            <span id="detailCategoryBadge" class="card-tag">SaaS</span>
+            <span id="detailPriceBadge" class="card-tag price-tag">₦5,000</span>
+          </div>
+          <h1 id="detailTitle" class="detail-title">Template Title</h1>
+          <p id="detailDescription" class="detail-desc">Description goes here...</p>
+          <div class="detail-actions">
+            <button id="detailPreviewBtn" class="btn-primary">Live Preview</button>
+            <button id="detailBuyBtn" class="btn-buy">Purchase Template</button>
+            <button id="detailCopyBtn" class="btn-secondary" hidden>Copy Source Code</button>
+          </div>
+        </div>
+        <div class="detail-features">
+          <h3>What's included in the ZIP:</h3>
+          <ul id="detailFeaturesList">
+            <li>High-quality HTML5 structure</li>
+            <li>Modern CSS3 styling</li>
+            <li>Responsive JavaScript functionality</li>
+            <li>Optimized assets and icons</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== FOOTER ===== -->
+  <footer class="site-footer" id="aboutSection">
+    <div class="about-block">
+      <p class="about-text">UI Vault is a curated collection of free and premium website templates and UI components.
+
+We provide modern, production-ready designs including landing pages, SaaS interfaces, e-commerce layouts, dashboards, and portfolio templates.
+
+Our goal is to help developers, startups, and businesses build faster with clean, reusable code and high-quality UI resources.</p>
+      <br><br><br>
+    </div>
+    <p>© 2026 <strong>Kuvwy</strong> · <span>All rights reserved</span></p>
+  </footer>
+  <!-- ===== PREVIEW MODAL ===== -->
+  <div id="previewModal" class="modal" hidden>
+    <div class="modal-backdrop" id="previewBackdrop"></div>
+    <div class="modal-container">
+      <div class="modal-header">
+        <h3>Live Preview</h3>
+        <button class="modal-close" id="previewClose">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div id="previewLoading" class="preview-status">Loading preview...</div>
+        <div id="previewError" class="preview-status error" hidden></div>
+        <iframe id="previewIframe" sandbox="allow-scripts allow-same-origin"></iframe>
+      </div>
+    </div>
+  </div>
+
+  <div class="offline-banner" id="offlineBanner" style="display:none;align-items:center;justify-content:center;gap:8px;background-color:rgba(220,53,69,0.75);color:white;padding:6px 16px;border-radius:20px;font-family:sans-serif;font-size:13px;font-weight:600;position:fixed;bottom:15px;left:50%;transform:translateX(-50%);z-index:9999;animation:blink-animation 2s infinite ease-in-out;box-shadow:0 2px 8px rgba(0,0,0,0.2);backdrop-filter:blur(4px);pointer-events:none;">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="1" y1="1" x2="23" y2="23"/><path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55M5 12.55a10.94 10.94 0 0 1 5.17-2.39M10.71 5.05A16 16 0 0 1 22.56 9M1.42 9a15.91 15.91 0 0 1 4.7-2.88M8.53 16.11a6 6 0 0 1 6.95 0M12 20h.01"/></svg>
+    <span>Offline</span>
+  </div>
+
+  <!-- ===== AUTH MODAL ===== -->
+  <div id="authModal" class="auth-modal" hidden>
+    <div class="auth-backdrop" id="authBackdrop"></div>
+    <div class="auth-box">
+      <button class="auth-close" id="authClose">&times;</button>
+      <div class="auth-logo"><span class="logo-dot"></span>UIVault by Kuvwy</div>
+      <div class="auth-tabs">
+        <button class="auth-tab active" id="tabLogin" data-tab="login">Log In</button>
+        <button class="auth-tab" id="tabSignup" data-tab="signup">Join Kuvwy</button>
+      </div>
+      <div class="auth-form" id="formLogin">
+        <p class="auth-subtitle">Welcome back. Log in to continue.</p>
+        <label class="auth-label">Email</label>
+        <input type="email" id="loginEmail" class="auth-input" placeholder="you@example.com" autocomplete="email" />
+        <label class="auth-label">Password</label>
+        <div class="auth-password-wrap">
+          <input type="password" id="loginPassword" class="auth-input" placeholder="Your password" autocomplete="current-password" />
+          <button type="button" class="eye-btn" data-target="loginPassword" aria-label="Show password">
+            <svg class="eye-icon eye-off" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+            <svg class="eye-icon eye-on" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" hidden><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
+        <p class="auth-error" id="loginError" hidden></p>
+        <button class="auth-submit" id="loginSubmit">Log In</button>
+        <p class="auth-switch">Don't have an account? <span class="auth-switch-link" data-switch="signup">Join Kuvwy</span></p>
+      </div>
+      <div class="auth-form" id="formSignup" hidden>
+        <p class="auth-subtitle">Create your account to get started.</p>
+        <label class="auth-label">Email</label>
+        <input type="email" id="signupEmail" class="auth-input" placeholder="you@example.com" autocomplete="email" />
+        <label class="auth-label">Password</label>
+        <div class="auth-password-wrap">
+          <input type="password" id="signupPassword" class="auth-input" placeholder="Create a password" autocomplete="new-password" />
+          <button type="button" class="eye-btn" data-target="signupPassword" aria-label="Show password">
+            <svg class="eye-icon eye-off" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+            <svg class="eye-icon eye-on" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" hidden><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
+        <p class="auth-error" id="signupError" hidden></p>
+        <button class="auth-submit" id="signupSubmit">Create Account</button>
+        <p class="auth-switch">Already have an account? <span class="auth-switch-link" data-switch="login">Log In</span></p>
+      </div>
+    </div>
+  </div>
+  <!-- ===== YOUR PROFILE PANEL ===== -->
+  <div id="profileModal" class="profile-modal" hidden>
+    <div class="profile-backdrop" id="profileBackdrop"></div>
+    <div class="profile-box">
+      <div class="profile-header">
+        <h2>Your Profile</h2>
+        <div class="profile-header-actions">
+          <button class="btn-refresh" id="refreshPurchasesBtn">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+            Refresh
+          </button>
+          <button class="profile-close" id="profileClose">&times;</button>
+        </div>
+      </div>
+      <div class="profile-user-info">
+        <p class="profile-email" id="profileEmail"></p>
+        <p class="profile-member">Kuvwy Member</p>
+      </div>
+      <div class="profile-section-title">Owned Templates</div>
+      <div class="profile-list" id="profileList">
+        <div class="profile-empty">
+          <div class="profile-empty-icon">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="M3.3 7L12 12l8.7-5"/><path d="M12 22V12"/></svg>
+          </div>
+          Loading your templates...
+        </div>
+      </div>
+      <div class="profile-footer">
+        <button class="btn-logout" id="logoutBtn">Log Out</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="script.js"></script>
+</body>
+</html>
