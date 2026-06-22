@@ -79,7 +79,7 @@ function buyComponent(template) {
 function proceedToCheckout(template) {
   localStorage.setItem('pendingPurchase', template.id);
   localStorage.setItem('pendingUserId', currentUser.id);
-  window.open('https://paystack.com/pay/xq30iszzem', '_blank');
+  window.open('https://paystack.shop/pay/6hjrfs3ofp', '_blank');
   showToast('Opening secure checkout...');
 }
 
