@@ -108,6 +108,57 @@
     .auth-switch-link { color:#d97706;font-weight:600;cursor:pointer;text-decoration:underline; }
     @keyframes blink-animation { 0%{opacity:1}50%{opacity:0.5}100%{opacity:1} }
     @keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+    
+    .detail-title {
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: #18181b;
+  margin-bottom: 8px;
+}
+
+.template-price {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #d97706;
+  margin: 8px 0 16px 0;
+}
+
+.detail-desc {
+  font-size: 1.1rem;
+  color: #52525b;
+  line-height: 1.6;
+  margin-bottom: 24px;
+}
+/* Premium cards — no color change, just strong lift + shadow */
+.template-card.paid {
+  cursor: pointer;
+  transition: transform 0.35s cubic-bezier(0.17, 0.67, 0.88, 1.01), 
+              box-shadow 0.35s cubic-bezier(0.17, 0.67, 0.88, 1.01);
+  position: relative;
+}
+
+.template-card.paid:hover {
+  transform: translateY(-8px); /* Lifted higher: -8px instead of -4px */
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15); /* Deeper, more premium shadow */
+  /* ❌ NO background color change — removed entirely */
+}
+
+/* Arrow stays subtle */
+.template-card.paid::after {
+  content: '→';
+  position: absolute;
+  bottom: 16px;
+  right: 16px;
+  font-size: 0.9rem;
+  color: #d97706;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.template-card.paid:hover::after {
+  opacity: 1;
+}
   </style>
 </head>
 <body>
@@ -130,7 +181,7 @@
       <a href="#" id="mobileNavFree">Free UI Resources</a>
       <a href="#" id="mobileNavPremium">Premium UI Resources</a>
       <a href="#" id="mobileNavAbout">About Us</a>
-      <a href="#" id="mobileNavProfile" style="display:none;color:#d97706;font-weight:600;">Your Profile</a>
+<a href="#" id="mobileNavProfile" style="display: inline-block !important; background-color: #d97706; color: white; font-weight: 600; border: 2px solid #d97706 !important; border-bottom: 2px solid #d97706 !important; padding: 10px 24px; border-radius: 6px; text-decoration: none !important; outline: none !important; transition: all 0.3s ease; box-shadow: 0 4px 6px rgba(217, 119, 6, 0.2); text-align: center; line-height: 1;" onmouseover="this.style.backgroundColor='#b45309'; this.style.borderColor='#b45309'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 12px rgba(217, 119, 6, 0.3)'" onmouseout="this.style.backgroundColor='#d97706'; this.style.borderColor='#d97706'; this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 6px rgba(217, 119, 6, 0.2)'">Your Profile</a>
     </div>
   </header>
 
@@ -145,8 +196,7 @@
       <span class="search-icon">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
       </span>
-      <input type="text" id="searchInput" class="search-input" placeholder="Search templates e.g. dashboard, portfolio" autocomplete="off" spellcheck="false" />
-      <span class="search-shortcut">LIVE</span>
+      <input type="text" id="searchInput" class="search-input" placeholder="Search templates " autocomplete="off" spellcheck="false" />
     </div>
     <div class="filter-bar">
       <button class="filter-btn active" data-filter="all">All</button>
@@ -180,17 +230,25 @@
   </main>
 
   <!-- ===== TEMPLATE DETAIL VIEW ===== -->
-  <section id="templateDetailView" class="detail-view" hidden>
+<section id="templateDetailView" class="detail-view" hidden>
     <div class="detail-container">
       <button id="backToGridBtn" class="back-btn">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" fill="none"></path>
+          <path d="M16 17l5-5-5-5" fill="none"></path>
+          <path d="M21 12H9" fill="none"></path>
+          
+          <line x1="0" y1="0" x2="0" y2="0" stroke="transparent" style="pointer-events: none;"></line>
+          <polyline points="0,0 0,0" stroke="transparent" style="pointer-events: none;"></polyline>
+        </svg>
         Back to Templates
       </button>
+
       <div class="detail-content">
         <div class="detail-header">
           <div class="detail-badges">
             <span id="detailCategoryBadge" class="card-tag">SaaS</span>
-            <span id="detailPriceBadge" class="card-tag price-tag">₦5,000</span>
+            <span id="detailPriceBadge" class="card-tag price-tag">₦3,000</span>
           </div>
           <h1 id="detailTitle" class="detail-title">Template Title</h1>
           <p id="detailDescription" class="detail-desc">Description goes here...</p>

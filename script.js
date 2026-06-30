@@ -326,7 +326,7 @@ function buildPremiumCard(template) {
     '<div class="card-image" style="' + bgStyle + 'display:flex;align-items:center;justify-content:center;position:relative;">' +
     (!imageUrl ? '<span style="font-family:\'DM Mono\',monospace;font-size:0.75rem;color:' + accent + ';font-weight:500;text-transform:uppercase;letter-spacing:0.1em;">// ' + template.category + '</span>' : '') +
     '<span class="paid-badge">PRO</span></div>' +
-    '<div class="card-body"><div class="card-meta"><span class="card-tag price-tag">₦' + template.price + '</span>' + tagMarkup + '</div>' +
+    '<div class="card-body"><div class="card-meta">' + tagMarkup + '</div>' +
     '<h2 class="card-title">' + template.title + '</h2></div>';
   return card;
 }
@@ -519,20 +519,32 @@ var currentDetailTemplate = null;
 
 async function openDetailView(template) {
   currentDetailTemplate = template;
-  document.getElementById('detailTitle').textContent = template.title;
-  document.getElementById('detailDescription').textContent = template.description || 'No description available.';
-  document.getElementById('detailCategoryBadge').textContent = template.category;
-  var priceBadge = document.getElementById('detailPriceBadge');
-  var buyBtn = document.getElementById('detailBuyBtn');
-  var copyBtn = document.getElementById('detailCopyBtn');
-  var previewBtn = document.getElementById('detailPreviewBtn');
-  if (template.price > 0) {
-    priceBadge.textContent = '₦' + template.price;
-    priceBadge.style.display = 'inline-block';
-    var owned = await isUnlocked(template.id);
-    if (owned) {
-      buyBtn.hidden = true;
-      copyBtn.hidden = false;
+document.getElementById('detailTitle').textContent = template.title;
+document.getElementById('detailDescription').textContent = template.description || 'No description available.';
+document.getElementById('detailCategoryBadge').textContent = template.category;
+
+var priceBadge = document.getElementById('detailPriceBadge');
+var buyBtn = document.getElementById('detailBuyBtn');
+var copyBtn = document.getElementById('detailCopyBtn');
+var previewBtn = document.getElementById('detailPreviewBtn');
+
+if (template.price > 0) {
+  // ✅ FIX 1: Hide the inline badge so it doesn't show next to category
+  priceBadge.style.display = 'none';
+
+  // ✅ FIX 2: Create dedicated price line below title with proper NGN formatting
+  let priceLine = document.querySelector('.detail-header .template-price');
+  if (!priceLine) {
+    priceLine = document.createElement('p');
+    priceLine.className = 'template-price';
+    document.getElementById('detailTitle').insertAdjacentElement('afterend', priceLine);
+  }
+  priceLine.textContent = `Price: ₦${Number(template.price).toLocaleString('en-NG')}`;
+
+  var owned = await isUnlocked(template.id);
+  if (owned) {
+    buyBtn.hidden = true;
+    copyBtn.hidden = false;
       // Reuse the same button: ZIP templates get "Download ZIP",
       // inline component templates keep "Copy Code"
       copyBtn.textContent = template.file_path ? 'Download ZIP' : 'Copy Code';
