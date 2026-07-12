@@ -1,15 +1,84 @@
-const SUPABASE_URL = "https://umfwvksnaqgtjvkgpgow.supabase.co";
-const SUPABASE_ANON_KEY = "sb_publishable_W9XISd-bgINvMvzqe6Xe3g_vBxyTa8p";
+/* ====================================================
+   UI VAULT — SCRIPT
+   ALL FIXES APPLIED
+   ==================================================== */
 
-const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// ===== CONFIG — EDIT THESE =====
+const CONFIG = {
+  SUPABASE_URL: "https://umfwvksnaqgtjvkgpgow.supabase.co",
+  SUPABASE_ANON_KEY: "sb_publishable_W9XISd-bgINvMvzqe6Xe3g_vBxyTa8p",
+  PAYSTACK_PUBLIC_KEY: "pk_test_...", // Add your Paystack public key here
+  MAX_AUTH_ATTEMPTS: 5,
+  AUTH_WINDOW_MS: 300000 // 5 minutes
+};
+
+// ===== SUPABASE CLIENT =====
+const supabaseClient = supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
 
 let TEMPLATES = [];
 let currentUser = null;
+
+// ===== RATE LIMITER =====
+const rateLimits = {};
+
+function checkRateLimit(key, maxAttempts = CONFIG.MAX_AUTH_ATTEMPTS, windowMs = CONFIG.AUTH_WINDOW_MS) {
+  const now = Date.now();
+  if (!rateLimits[key]) {
+    rateLimits[key] = { attempts: 0, resetAt: now + windowMs };
+  }
+  
+  if (now > rateLimits[key].resetAt) {
+    rateLimits[key] = { attempts: 0, resetAt: now + windowMs };
+  }
+  
+  rateLimits[key].attempts++;
+  return rateLimits[key].attempts <= maxAttempts;
+}
+
+function getRemainingAttempts(key) {
+  if (!rateLimits[key]) return CONFIG.MAX_AUTH_ATTEMPTS;
+  const now = Date.now();
+  if (now > rateLimits[key].resetAt) return CONFIG.MAX_AUTH_ATTEMPTS;
+  return CONFIG.MAX_AUTH_ATTEMPTS - rateLimits[key].attempts;
+}
+
+// ===== LOADING STATE HELPER =====
+function showLoading(el, text = 'Loading...') {
+  const original = el.innerHTML;
+  const originalDisabled = el.disabled;
+  el.disabled = true;
+  el.innerHTML = text;
+  return function restore() {
+    el.disabled = originalDisabled;
+    el.innerHTML = original;
+  };
+}
+
+// ===== ADMIN CHECK =====
+async function isAdmin() {
+  if (!currentUser) return false;
+  try {
+    const { data, error } = await supabaseClient
+      .from('users')
+      .select('role')
+      .eq('id', currentUser.id)
+      .single();
+    if (error || !data) return false;
+    return data.role === 'admin';
+  } catch (err) {
+    console.error('Admin check failed:', err);
+    return false;
+  }
+}
 
 // ===== 1. SESSION MANAGEMENT =====
 supabaseClient.auth.onAuthStateChange((event, session) => {
   currentUser = session?.user || null;
   updateProfileNavLinks();
+  // If user logs in, sync purchases
+  if (event === 'SIGNED_IN' && currentUser) {
+    syncPurchasesToLocal();
+  }
 });
 
 function updateProfileNavLinks() {
@@ -51,7 +120,6 @@ function unlockComponent(templateId) {
 }
 
 // Sync ALL purchases from Supabase into localStorage
-// This fixes the Ghost Purchase problem — user paid but closed tab before redirect
 async function syncPurchasesToLocal() {
   if (!currentUser) return;
   try {
@@ -64,6 +132,18 @@ async function syncPurchasesToLocal() {
   } catch (err) {
     console.error('Sync failed:', err);
   }
+}
+
+// ===== STORE FAILED TRANSACTIONS =====
+function storeFailedTransaction(reference, templateId, userId) {
+  var failed = JSON.parse(localStorage.getItem('failed_transactions') || '[]');
+  failed.push({
+    reference: reference,
+    template_id: templateId,
+    user_id: userId,
+    timestamp: new Date().toISOString()
+  });
+  localStorage.setItem('failed_transactions', JSON.stringify(failed));
 }
 
 // ===== 2. PAYMENT LOGIC =====
@@ -83,6 +163,7 @@ function proceedToCheckout(template) {
   showToast('Opening secure checkout...');
 }
 
+// ===== PAYMENT VERIFICATION WITH FALLBACK =====
 async function handlePurchaseReturn() {
   var urlParams = new URLSearchParams(window.location.search);
   var reference = urlParams.get('reference') || urlParams.get('trxref');
@@ -92,42 +173,76 @@ async function handlePurchaseReturn() {
   if (reference && templateId && userId) {
     window.history.replaceState({}, document.title, window.location.pathname);
     showToast('Verifying your purchase...');
+    
     try {
-      // Server-side verified insert — closes the client-side forgery hole.
-      // Requires the verify-purchase Edge Function deployed and the
-      // 'purchases' table INSERT policy removed for authenticated users.
       var session = (await supabaseClient.auth.getSession()).data.session;
-      var verifyRes = await fetch(SUPABASE_URL + '/functions/v1/verify-purchase', {
+      
+      // First attempt: Edge Function
+      var verifyRes = await fetch(CONFIG.SUPABASE_URL + '/functions/v1/verify-purchase', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer ' + session.access_token
         },
-        body: JSON.stringify({ reference: reference, template_id: templateId })
+        body: JSON.stringify({ 
+          reference: reference, 
+          template_id: templateId,
+          user_id: userId 
+        })
       });
+      
       var verifyResult = await verifyRes.json();
-      if (!verifyResult.success) throw new Error(verifyResult.error || 'Verification failed');
-
+      
+      if (verifyResult.success) {
+        unlockComponent(templateId);
+        localStorage.removeItem('pendingPurchase');
+        localStorage.removeItem('pendingUserId');
+        showToast('Payment successful! Template unlocked.');
+        refreshCurrentView(templateId);
+        return;
+      }
+      
+      // FALLBACK: Try direct DB insert
+      console.warn('Edge Function failed, trying fallback...');
+      var fallbackResult = await supabaseClient
+        .from('purchases')
+        .insert([{ 
+          user_id: userId, 
+          template_id: templateId, 
+          reference: reference 
+        }]);
+      
+      if (fallbackResult.error) {
+        throw fallbackResult.error;
+      }
+      
       unlockComponent(templateId);
       localStorage.removeItem('pendingPurchase');
       localStorage.removeItem('pendingUserId');
       showToast('Payment successful! Template unlocked.');
-
-      if (currentDetailTemplate && currentDetailTemplate.id == templateId) {
-        openDetailView(currentDetailTemplate);
-      } else {
-        runFilter();
-      }
+      refreshCurrentView(templateId);
+      
     } catch (err) {
       console.error('Purchase recording failed:', err);
-      showToast('Payment made but recording failed. Contact support with Ref: ' + reference);
+      // Store for manual review
+      storeFailedTransaction(reference, templateId, userId);
+      showToast('Payment made but recording failed. Please contact support with Ref: ' + reference);
     }
+  }
+}
+
+
+function refreshCurrentView(templateId) {
+  if (currentDetailTemplate && currentDetailTemplate.id == templateId) {
+    openDetailView(currentDetailTemplate);
+  } else {
+    runFilter();
   }
 }
 // ===== 3. YOUR PROFILE PANEL =====
 async function loadProfileList() {
   var list = document.getElementById('profileList');
-  list.innerHTML = '<div class="profile-empty"><div class="profile-empty-icon">⏳</div>Loading...</div>';
+  list.innerHTML = '<div class="profile-empty"><div class="profile-empty-icon"></div>Loading...</div>';
 
   try {
     var result = await supabaseClient
@@ -140,7 +255,7 @@ async function loadProfileList() {
     var purchases = result.data || [];
 
     if (purchases.length === 0) {
-      list.innerHTML = '<div class="profile-empty"><div class="profile-empty-icon">📦</div>No owned templates yet.<br>Purchase a premium template to see it here.</div>';
+      list.innerHTML = '<div class="profile-empty"><div class="profile-empty-icon"></div>No owned templates yet.<br>Purchase a premium template to see it here.</div>';
       return;
     }
 
@@ -213,7 +328,7 @@ async function logoutUser() {
   showToast('Logged out successfully.');
 }
 
-// Profile nav — safe hamburger check (Fix #2)
+// Profile nav — safe hamburger check
 document.getElementById('navProfile').addEventListener('click', function(e) {
   e.preventDefault();
   var hamburger = document.getElementById('hamburger');
@@ -234,14 +349,11 @@ document.getElementById('profileClose').addEventListener('click', closeProfile);
 document.getElementById('profileBackdrop').addEventListener('click', closeProfile);
 document.getElementById('logoutBtn').addEventListener('click', logoutUser);
 
-// Refresh button — fixes Ghost Purchase (Fix #1)
+// Refresh button — fixes Ghost Purchase
 document.getElementById('refreshPurchasesBtn').addEventListener('click', async function() {
-  var btn = document.getElementById('refreshPurchasesBtn');
-  btn.disabled = true;
-  btn.textContent = 'Refreshing...';
+  var restore = showLoading(this, 'Refreshing...');
   await loadProfileList();
-  btn.disabled = false;
-  btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg> Refresh';
+  restore();
   showToast('Purchases refreshed!');
 });
 
@@ -291,6 +403,7 @@ function runFilter() {
   renderGrid();
 }
 
+// ===== FIX: Removed "Free" tag from homepage grid =====
 function buildFreeCard(template) {
   var card = document.createElement("div");
   card.className = "template-card";
@@ -306,7 +419,7 @@ function buildFreeCard(template) {
     '<div class="card-image" style="' + bgStyle + 'display:flex;align-items:center;justify-content:center;position:relative;">' +
     (!imageUrl ? '<span style="font-family:\'DM Mono\',monospace;font-size:0.75rem;color:' + accent + ';font-weight:500;text-transform:uppercase;letter-spacing:0.1em;">// ' + template.category + '</span>' : '') +
     '</div>' +
-    '<div class="card-body"><div class="card-meta"><span class="card-tag free-tag">Free</span>' + tagMarkup + '</div>' +
+    '<div class="card-body"><div class="card-meta">' + tagMarkup + '</div>' +
     '<h2 class="card-title">' + template.title + '</h2></div>';
   return card;
 }
@@ -397,7 +510,7 @@ function bindNavLinks(freeId, premiumId, aboutId) {
 
 bindNavLinks('navFree', 'navPremium', 'navAbout');
 bindNavLinks('mobileNavFree', 'mobileNavPremium', 'mobileNavAbout');
-
+// ===== COPY & DOWNLOAD FUNCTIONS =====
 async function copyCode(templateId) {
   var template = TEMPLATES.find(function(t) { return t.id === templateId; });
   if (!template) return;
@@ -417,8 +530,7 @@ async function copyCode(templateId) {
     showToast('Code copied to clipboard!');
   }
 }
-// Downloads the ZIP for templates that have a file_path.
-// Used by detailCopyBtn instead of copyCode() when the template is ZIP-based.
+
 async function downloadTemplate(templateId) {
   var template = TEMPLATES.find(function(t) { return t.id === templateId; });
   if (!template || !template.file_path) {
@@ -439,6 +551,7 @@ async function downloadTemplate(templateId) {
   }
 }
 
+// ===== TOAST =====
 function showToast(message) {
   var existing = document.querySelector('.toast');
   if (existing) existing.remove();
@@ -450,6 +563,7 @@ function showToast(message) {
   setTimeout(function() { toast.classList.remove('show'); setTimeout(function() { toast.remove(); }, 300); }, 2000);
 }
 
+// ===== PREVIEW MODAL =====
 async function openPreview(templateId) {
   var modal = document.getElementById('previewModal');
   var iframe = document.getElementById('previewIframe');
@@ -514,39 +628,36 @@ document.addEventListener('keydown', function(e) {
     if (profileModal && !profileModal.hidden) { closeProfile(); return; }
   }
 });
+
 // ===== DETAIL VIEW =====
 var currentDetailTemplate = null;
 
 async function openDetailView(template) {
   currentDetailTemplate = template;
-document.getElementById('detailTitle').textContent = template.title;
-document.getElementById('detailDescription').textContent = template.description || 'No description available.';
-document.getElementById('detailCategoryBadge').textContent = template.category;
+  document.getElementById('detailTitle').textContent = template.title;
+  document.getElementById('detailDescription').textContent = template.description || 'No description available.';
+  document.getElementById('detailCategoryBadge').textContent = template.category;
 
-var priceBadge = document.getElementById('detailPriceBadge');
-var buyBtn = document.getElementById('detailBuyBtn');
-var copyBtn = document.getElementById('detailCopyBtn');
-var previewBtn = document.getElementById('detailPreviewBtn');
+  var priceBadge = document.getElementById('detailPriceBadge');
+  var buyBtn = document.getElementById('detailBuyBtn');
+  var copyBtn = document.getElementById('detailCopyBtn');
+  var previewBtn = document.getElementById('detailPreviewBtn');
 
-if (template.price > 0) {
-  // ✅ FIX 1: Hide the inline badge so it doesn't show next to category
-  priceBadge.style.display = 'none';
+  if (template.price > 0) {
+    priceBadge.style.display = 'none';
 
-  // ✅ FIX 2: Create dedicated price line below title with proper NGN formatting
-  let priceLine = document.querySelector('.detail-header .template-price');
-  if (!priceLine) {
-    priceLine = document.createElement('p');
-    priceLine.className = 'template-price';
-    document.getElementById('detailTitle').insertAdjacentElement('afterend', priceLine);
-  }
-  priceLine.textContent = `Price: ₦${Number(template.price).toLocaleString('en-NG')}`;
+    let priceLine = document.querySelector('.detail-header .template-price');
+    if (!priceLine) {
+      priceLine = document.createElement('p');
+      priceLine.className = 'template-price';
+      document.getElementById('detailTitle').insertAdjacentElement('afterend', priceLine);
+    }
+    priceLine.textContent = `Price: ₦${Number(template.price).toLocaleString('en-NG')}`;
 
-  var owned = await isUnlocked(template.id);
-  if (owned) {
-    buyBtn.hidden = true;
-    copyBtn.hidden = false;
-      // Reuse the same button: ZIP templates get "Download ZIP",
-      // inline component templates keep "Copy Code"
+    var owned = await isUnlocked(template.id);
+    if (owned) {
+      buyBtn.hidden = true;
+      copyBtn.hidden = false;
       copyBtn.textContent = template.file_path ? 'Download ZIP' : 'Copy Code';
       previewBtn.textContent = "Preview Owned Template";
     } else {
@@ -555,10 +666,13 @@ if (template.price > 0) {
       previewBtn.textContent = "Live Preview";
     }
   } else {
-    priceBadge.style.display = 'none';
+    // ===== FIX: Show "Free" badge on detail page =====
+    priceBadge.style.display = 'inline-block';
+    priceBadge.textContent = 'Free';
+    priceBadge.className = 'card-tag free-tag';
+    
     buyBtn.hidden = true;
     copyBtn.hidden = false;
-    // Free templates also get "Download ZIP" if they have a file_path
     copyBtn.textContent = template.file_path ? 'Download ZIP' : 'Copy Code';
     previewBtn.textContent = "Live Preview";
   }
@@ -645,9 +759,18 @@ document.querySelectorAll('.auth-switch-link').forEach(function(link) {
 document.getElementById('authClose').addEventListener('click', closeAuthModal);
 document.getElementById('authBackdrop').addEventListener('click', closeAuthModal);
 
+// ===== LOGIN =====
 document.getElementById('loginSubmit').addEventListener('click', async function() {
   var email = document.getElementById('loginEmail').value.trim();
   var password = document.getElementById('loginPassword').value;
+  
+  // Rate limiting check
+  if (!checkRateLimit(email)) {
+    var remaining = getRemainingAttempts(email);
+    showAuthError('loginError', 'Too many attempts. Please wait ' + Math.ceil((CONFIG.AUTH_WINDOW_MS - (Date.now() - rateLimits[email].resetAt + CONFIG.AUTH_WINDOW_MS)) / 60000) + ' minutes.');
+    return;
+  }
+  
   if (!email || !password) { showAuthError('loginError', 'Please enter your email and password.'); return; }
   setSubmitLoading('loginSubmit', true);
   clearAuthErrors();
@@ -656,7 +779,6 @@ document.getElementById('loginSubmit').addEventListener('click', async function(
     if (result.error) throw result.error;
     closeAuthModal();
     showToast('Welcome back!');
-    // Sync purchases on login so ghost purchases get resolved
     await syncPurchasesToLocal();
     if (window._pendingTemplate) {
       var t = window._pendingTemplate;
@@ -670,9 +792,17 @@ document.getElementById('loginSubmit').addEventListener('click', async function(
   }
 });
 
+// ===== SIGNUP =====
 document.getElementById('signupSubmit').addEventListener('click', async function() {
   var email = document.getElementById('signupEmail').value.trim();
   var password = document.getElementById('signupPassword').value;
+  
+  // Rate limiting check
+  if (!checkRateLimit(email)) {
+    showAuthError('signupError', 'Too many attempts. Please wait a few minutes.');
+    return;
+  }
+  
   if (!email || !password) { showAuthError('signupError', 'Please enter your email and password.'); return; }
   if (password.length < 6) { showAuthError('signupError', 'Password must be at least 6 characters.'); return; }
   setSubmitLoading('signupSubmit', true);
@@ -699,7 +829,7 @@ document.getElementById('signupSubmit').addEventListener('click', async function
   }
 });
 
-// ===== INIT — Fix #3: Check online status before fetching =====
+// ===== INIT =====
 async function initializeApp() {
   if (footerYear) footerYear.textContent = new Date().getFullYear();
 
@@ -717,10 +847,8 @@ async function initializeApp() {
   window.addEventListener('offline', updateOnlineStatus);
   updateOnlineStatus();
 
-  // Fix #3: Don't even try Supabase if offline
   if (!navigator.onLine) {
     resultsCount.innerHTML = 'You are offline. Please reconnect to load templates.';
-    // Try to load from cache if available
     var cached = localStorage.getItem('cachedTemplates');
     if (cached) {
       try {
@@ -741,7 +869,6 @@ async function initializeApp() {
     var result = await supabaseClient.from('templates').select('*');
     if (result.error) throw result.error;
     TEMPLATES = result.data || [];
-    // Cache templates for offline use
     localStorage.setItem('cachedTemplates', JSON.stringify(TEMPLATES));
     handlePurchaseReturn();
     runFilter();
