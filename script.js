@@ -1,24 +1,21 @@
 /* ====================================================
-   UI VAULT — SCRIPT
-   ALL FIXES APPLIED
+   UI VAULT — SCRIPT — PART 1
+   Config, Supabase Client, Rate Limiter, Loading Helper
    ==================================================== */
 
-// ===== CONFIG — EDIT THESE =====
 const CONFIG = {
   SUPABASE_URL: "https://umfwvksnaqgtjvkgpgow.supabase.co",
   SUPABASE_ANON_KEY: "sb_publishable_W9XISd-bgINvMvzqe6Xe3g_vBxyTa8p",
-  PAYSTACK_PUBLIC_KEY: "pk_test_...", // Add your Paystack public key here
+  PAYSTACK_PUBLIC_KEY: "pk_live_04e7f9130c3908734b3e8f8b087143d165c5722b", // Add your Paystack public key here
   MAX_AUTH_ATTEMPTS: 5,
   AUTH_WINDOW_MS: 300000 // 5 minutes
 };
 
-// ===== SUPABASE CLIENT =====
 const supabaseClient = supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
 
 let TEMPLATES = [];
 let currentUser = null;
 
-// ===== RATE LIMITER =====
 const rateLimits = {};
 
 function checkRateLimit(key, maxAttempts = CONFIG.MAX_AUTH_ATTEMPTS, windowMs = CONFIG.AUTH_WINDOW_MS) {
@@ -26,11 +23,9 @@ function checkRateLimit(key, maxAttempts = CONFIG.MAX_AUTH_ATTEMPTS, windowMs = 
   if (!rateLimits[key]) {
     rateLimits[key] = { attempts: 0, resetAt: now + windowMs };
   }
-  
   if (now > rateLimits[key].resetAt) {
     rateLimits[key] = { attempts: 0, resetAt: now + windowMs };
   }
-  
   rateLimits[key].attempts++;
   return rateLimits[key].attempts <= maxAttempts;
 }
@@ -42,7 +37,6 @@ function getRemainingAttempts(key) {
   return CONFIG.MAX_AUTH_ATTEMPTS - rateLimits[key].attempts;
 }
 
-// ===== LOADING STATE HELPER =====
 function showLoading(el, text = 'Loading...') {
   const original = el.innerHTML;
   const originalDisabled = el.disabled;
@@ -54,7 +48,6 @@ function showLoading(el, text = 'Loading...') {
   };
 }
 
-// ===== ADMIN CHECK =====
 async function isAdmin() {
   if (!currentUser) return false;
   try {
@@ -70,12 +63,14 @@ async function isAdmin() {
     return false;
   }
 }
+/* ====================================================
+   UI VAULT — SCRIPT — PART 2
+   Session Management, Auth, Profile, Payment
+   ==================================================== */
 
-// ===== 1. SESSION MANAGEMENT =====
 supabaseClient.auth.onAuthStateChange((event, session) => {
   currentUser = session?.user || null;
   updateProfileNavLinks();
-  // If user logs in, sync purchases
   if (event === 'SIGNED_IN' && currentUser) {
     syncPurchasesToLocal();
   }
@@ -119,7 +114,6 @@ function unlockComponent(templateId) {
   }
 }
 
-// Sync ALL purchases from Supabase into localStorage
 async function syncPurchasesToLocal() {
   if (!currentUser) return;
   try {
@@ -134,7 +128,6 @@ async function syncPurchasesToLocal() {
   }
 }
 
-// ===== STORE FAILED TRANSACTIONS =====
 function storeFailedTransaction(reference, templateId, userId) {
   var failed = JSON.parse(localStorage.getItem('failed_transactions') || '[]');
   failed.push({
@@ -146,7 +139,6 @@ function storeFailedTransaction(reference, templateId, userId) {
   localStorage.setItem('failed_transactions', JSON.stringify(failed));
 }
 
-// ===== 2. PAYMENT LOGIC =====
 function buyComponent(template) {
   if (!currentUser) {
     window._pendingTemplate = template;
@@ -163,7 +155,6 @@ function proceedToCheckout(template) {
   showToast('Opening secure checkout...');
 }
 
-// ===== PAYMENT VERIFICATION WITH FALLBACK =====
 async function handlePurchaseReturn() {
   var urlParams = new URLSearchParams(window.location.search);
   var reference = urlParams.get('reference') || urlParams.get('trxref');
@@ -173,11 +164,8 @@ async function handlePurchaseReturn() {
   if (reference && templateId && userId) {
     window.history.replaceState({}, document.title, window.location.pathname);
     showToast('Verifying your purchase...');
-    
     try {
       var session = (await supabaseClient.auth.getSession()).data.session;
-      
-      // First attempt: Edge Function
       var verifyRes = await fetch(CONFIG.SUPABASE_URL + '/functions/v1/verify-purchase', {
         method: 'POST',
         headers: {
@@ -190,9 +178,7 @@ async function handlePurchaseReturn() {
           user_id: userId 
         })
       });
-      
       var verifyResult = await verifyRes.json();
-      
       if (verifyResult.success) {
         unlockComponent(templateId);
         localStorage.removeItem('pendingPurchase');
@@ -201,9 +187,6 @@ async function handlePurchaseReturn() {
         refreshCurrentView(templateId);
         return;
       }
-      
-      // FALLBACK: Try direct DB insert
-      console.warn('Edge Function failed, trying fallback...');
       var fallbackResult = await supabaseClient
         .from('purchases')
         .insert([{ 
@@ -211,26 +194,21 @@ async function handlePurchaseReturn() {
           template_id: templateId, 
           reference: reference 
         }]);
-      
       if (fallbackResult.error) {
         throw fallbackResult.error;
       }
-      
       unlockComponent(templateId);
       localStorage.removeItem('pendingPurchase');
       localStorage.removeItem('pendingUserId');
       showToast('Payment successful! Template unlocked.');
       refreshCurrentView(templateId);
-      
     } catch (err) {
       console.error('Purchase recording failed:', err);
-      // Store for manual review
       storeFailedTransaction(reference, templateId, userId);
       showToast('Payment made but recording failed. Please contact support with Ref: ' + reference);
     }
   }
 }
-
 
 function refreshCurrentView(templateId) {
   if (currentDetailTemplate && currentDetailTemplate.id == templateId) {
@@ -239,7 +217,11 @@ function refreshCurrentView(templateId) {
     runFilter();
   }
 }
-// ===== 3. YOUR PROFILE PANEL =====
+/* ====================================================
+   UI VAULT — SCRIPT — PART 3
+   Profile Panel
+   ==================================================== */
+
 async function loadProfileList() {
   var list = document.getElementById('profileList');
   list.innerHTML = '<div class="profile-empty"><div class="profile-empty-icon"></div>Loading...</div>';
@@ -296,7 +278,6 @@ async function loadProfileList() {
       list.appendChild(item);
     });
 
-    // Also sync to localStorage so isUnlocked works offline
     purchases.forEach(function(p) { unlockComponent(p.template_id); });
 
   } catch (err) {
@@ -328,7 +309,6 @@ async function logoutUser() {
   showToast('Logged out successfully.');
 }
 
-// Profile nav — safe hamburger check
 document.getElementById('navProfile').addEventListener('click', function(e) {
   e.preventDefault();
   var hamburger = document.getElementById('hamburger');
@@ -337,6 +317,7 @@ document.getElementById('navProfile').addEventListener('click', function(e) {
   if (mobileNav) mobileNav.classList.remove('open');
   openProfile();
 });
+
 document.getElementById('mobileNavProfile').addEventListener('click', function(e) {
   e.preventDefault();
   var hamburger = document.getElementById('hamburger');
@@ -345,19 +326,22 @@ document.getElementById('mobileNavProfile').addEventListener('click', function(e
   if (mobileNav) mobileNav.classList.remove('open');
   openProfile();
 });
+
 document.getElementById('profileClose').addEventListener('click', closeProfile);
 document.getElementById('profileBackdrop').addEventListener('click', closeProfile);
 document.getElementById('logoutBtn').addEventListener('click', logoutUser);
 
-// Refresh button — fixes Ghost Purchase
 document.getElementById('refreshPurchasesBtn').addEventListener('click', async function() {
   var restore = showLoading(this, 'Refreshing...');
   await loadProfileList();
   restore();
   showToast('Purchases refreshed!');
 });
+/* ====================================================
+   UI VAULT — SCRIPT — PART 4
+   UI & Grid Logic
+   ==================================================== */
 
-// ===== 4. UI & GRID LOGIC =====
 var state = {
   query: "",
   filter: "all",
@@ -403,7 +387,6 @@ function runFilter() {
   renderGrid();
 }
 
-// ===== FIX: Removed "Free" tag from homepage grid =====
 function buildFreeCard(template) {
   var card = document.createElement("div");
   card.className = "template-card";
@@ -477,6 +460,7 @@ searchInput.addEventListener("input", function(e) { state.query = e.target.value
 searchInput.addEventListener("keydown", function(e) {
   if (e.key === "Escape") { searchInput.value = ""; state.query = ""; runFilter(); searchInput.blur(); }
 });
+
 filterBtns.forEach(function(btn) {
   btn.addEventListener("click", function() {
     filterBtns.forEach(function(b) { b.classList.remove("active"); });
@@ -510,7 +494,11 @@ function bindNavLinks(freeId, premiumId, aboutId) {
 
 bindNavLinks('navFree', 'navPremium', 'navAbout');
 bindNavLinks('mobileNavFree', 'mobileNavPremium', 'mobileNavAbout');
-// ===== COPY & DOWNLOAD FUNCTIONS =====
+/* ====================================================
+   UI VAULT — SCRIPT — PART 5
+   Copy, Download, Preview, Detail View
+   ==================================================== */
+
 async function copyCode(templateId) {
   var template = TEMPLATES.find(function(t) { return t.id === templateId; });
   if (!template) return;
@@ -551,7 +539,6 @@ async function downloadTemplate(templateId) {
   }
 }
 
-// ===== TOAST =====
 function showToast(message) {
   var existing = document.querySelector('.toast');
   if (existing) existing.remove();
@@ -563,7 +550,6 @@ function showToast(message) {
   setTimeout(function() { toast.classList.remove('show'); setTimeout(function() { toast.remove(); }, 300); }, 2000);
 }
 
-// ===== PREVIEW MODAL =====
 async function openPreview(templateId) {
   var modal = document.getElementById('previewModal');
   var iframe = document.getElementById('previewIframe');
@@ -618,6 +604,7 @@ function escapeHtml(text) {
 
 document.getElementById('previewClose').addEventListener('click', closePreview);
 document.getElementById('previewBackdrop').addEventListener('click', closePreview);
+
 document.addEventListener('keydown', function(e) {
   if (e.key === 'Escape') {
     var previewModal = document.getElementById('previewModal');
@@ -666,11 +653,9 @@ async function openDetailView(template) {
       previewBtn.textContent = "Live Preview";
     }
   } else {
-    // ===== FIX: Show "Free" badge on detail page =====
     priceBadge.style.display = 'inline-block';
     priceBadge.textContent = 'Free';
     priceBadge.className = 'card-tag free-tag';
-    
     buyBtn.hidden = true;
     copyBtn.hidden = false;
     copyBtn.textContent = template.file_path ? 'Download ZIP' : 'Copy Code';
@@ -687,8 +672,27 @@ document.getElementById('backToGridBtn').addEventListener('click', function() {
   document.querySelector('.grid-container').hidden = false;
   document.querySelector('.search-zone').hidden = false;
 });
+
 document.getElementById('detailPreviewBtn').addEventListener('click', function() { if (currentDetailTemplate) openPreview(currentDetailTemplate.id); });
-document.getElementById('detailBuyBtn').addEventListener('click', function() { if (currentDetailTemplate) buyComponent(currentDetailTemplate); });
+
+// ===== PURCHASE TEMPLATE — YOUR ORIGINAL FLOW (UNCHANGED) =====
+document.getElementById('detailBuyBtn').addEventListener('click', function() {
+  if (currentDetailTemplate) {
+    buyComponent(currentDetailTemplate);
+  }
+});
+
+// ===== NEW: Add to Cart Button in Detail View =====
+var detailAddToCartBtn = document.getElementById('detailAddToCartBtn');
+if (detailAddToCartBtn) {
+  detailAddToCartBtn.addEventListener('click', function() {
+    if (currentDetailTemplate) {
+      var t = currentDetailTemplate;
+      addToCart(t.id, t.title, t.price);
+    }
+  });
+}
+
 document.getElementById('detailCopyBtn').addEventListener('click', function() {
   if (!currentDetailTemplate) return;
   if (currentDetailTemplate.file_path) {
@@ -697,8 +701,15 @@ document.getElementById('detailCopyBtn').addEventListener('click', function() {
     copyCode(currentDetailTemplate.id);
   }
 });
+/* ====================================================
+   UI VAULT — SCRIPT — PART 6a
+   Auth, Login, Signup
+   ==================================================== */
 
-// ===== AUTH MODAL =====
+// ============================================================
+// AUTH MODAL
+// ============================================================
+
 function openAuthModal(defaultTab) {
   var modal = document.getElementById('authModal');
   modal.hidden = false;
@@ -753,24 +764,28 @@ document.querySelectorAll('.eye-btn').forEach(function(btn) {
 document.querySelectorAll('.auth-tab').forEach(function(tab) {
   tab.addEventListener('click', function() { switchAuthTab(tab.dataset.tab); });
 });
+
 document.querySelectorAll('.auth-switch-link').forEach(function(link) {
   link.addEventListener('click', function() { switchAuthTab(link.dataset.switch); });
 });
+
 document.getElementById('authClose').addEventListener('click', closeAuthModal);
 document.getElementById('authBackdrop').addEventListener('click', closeAuthModal);
 
-// ===== LOGIN =====
+// ============================================================
+// LOGIN — UPDATED to handle cart checkout resume
+// ============================================================
+
 document.getElementById('loginSubmit').addEventListener('click', async function() {
   var email = document.getElementById('loginEmail').value.trim();
   var password = document.getElementById('loginPassword').value;
-  
-  // Rate limiting check
+
   if (!checkRateLimit(email)) {
     var remaining = getRemainingAttempts(email);
     showAuthError('loginError', 'Too many attempts. Please wait ' + Math.ceil((CONFIG.AUTH_WINDOW_MS - (Date.now() - rateLimits[email].resetAt + CONFIG.AUTH_WINDOW_MS)) / 60000) + ' minutes.');
     return;
   }
-  
+
   if (!email || !password) { showAuthError('loginError', 'Please enter your email and password.'); return; }
   setSubmitLoading('loginSubmit', true);
   clearAuthErrors();
@@ -780,6 +795,14 @@ document.getElementById('loginSubmit').addEventListener('click', async function(
     closeAuthModal();
     showToast('Welcome back!');
     await syncPurchasesToLocal();
+
+    // ===== RESUME CART CHECKOUT IF PENDING =====
+    if (window._pendingCartCheckout) {
+      window._pendingCartCheckout = null;
+      openCheckout();
+      return;
+    }
+
     if (window._pendingTemplate) {
       var t = window._pendingTemplate;
       window._pendingTemplate = null;
@@ -792,17 +815,19 @@ document.getElementById('loginSubmit').addEventListener('click', async function(
   }
 });
 
-// ===== SIGNUP =====
+// ============================================================
+// SIGNUP — UPDATED to handle cart checkout resume
+// ============================================================
+
 document.getElementById('signupSubmit').addEventListener('click', async function() {
   var email = document.getElementById('signupEmail').value.trim();
   var password = document.getElementById('signupPassword').value;
-  
-  // Rate limiting check
+
   if (!checkRateLimit(email)) {
     showAuthError('signupError', 'Too many attempts. Please wait a few minutes.');
     return;
   }
-  
+
   if (!email || !password) { showAuthError('signupError', 'Please enter your email and password.'); return; }
   if (password.length < 6) { showAuthError('signupError', 'Password must be at least 6 characters.'); return; }
   setSubmitLoading('signupSubmit', true);
@@ -814,6 +839,13 @@ document.getElementById('signupSubmit').addEventListener('click', async function
     if (session) {
       closeAuthModal();
       showToast('Account created! Welcome to Kuvwy.');
+
+      if (window._pendingCartCheckout) {
+        window._pendingCartCheckout = null;
+        openCheckout();
+        return;
+      }
+
       if (window._pendingTemplate) {
         var t = window._pendingTemplate;
         window._pendingTemplate = null;
@@ -828,9 +860,435 @@ document.getElementById('signupSubmit').addEventListener('click', async function
     setSubmitLoading('signupSubmit', false);
   }
 });
+/* ====================================================
+   UI VAULT — SCRIPT — PART 6b
+   Cart System, Checkout, Initialization
+   ==================================================== */
 
-// ===== INIT =====
+// ============================================================
+// CART SYSTEM
+// ============================================================
+
+var cart = [];
+var cartBtn = document.getElementById('cartBtn');
+var cartSidebar = document.getElementById('cartSidebar');
+var cartOverlay = document.getElementById('cartOverlay');
+var cartClose = document.getElementById('cartClose');
+var cartItems = document.getElementById('cartItems');
+var cartTotal = document.getElementById('cartTotal');
+var cartCount = document.getElementById('cartCount');
+var checkoutBtn = document.getElementById('checkoutBtn');
+var browseBtn = document.getElementById('browseTemplatesBtn');
+var browseModal = document.getElementById('browseModal');
+var browseOverlay = document.getElementById('browseOverlay');
+var browseClose = document.getElementById('browseClose');
+var browseList = document.getElementById('browseList');
+var browseDoneBtn = document.getElementById('browseDoneBtn');
+var selectedTemplates = [];
+
+// ===== CART PERSISTENCE HELPERS (NEW) =====
+function saveCartToLocalStorage() {
+  try {
+    localStorage.setItem('kuvwy_cart', JSON.stringify(cart));
+  } catch (e) {
+    // Ignore – localStorage might be full or disabled
+  }
+}
+
+function loadCartFromLocalStorage() {
+  try {
+    var stored = localStorage.getItem('kuvwy_cart');
+    if (stored) {
+      var parsed = JSON.parse(stored);
+      if (Array.isArray(parsed)) {
+        cart = parsed;
+      } else {
+        cart = [];
+      }
+    } else {
+      cart = [];
+    }
+  } catch (e) {
+    cart = [];
+  }
+}
+
+// ===== UPDATE CART UI (MODIFIED – added saveCartToLocalStorage at the end) =====
+function updateCartUI() {
+  var total = 0;
+  var itemCount = 0;
+
+  if (cartItems) {
+    if (cart.length === 0) {
+      cartItems.innerHTML = '<p class="cart-empty">Your cart is empty.</p>';
+    } else {
+      var html = '';
+      for (var i = 0; i < cart.length; i++) {
+        var item = cart[i];
+        total += item.price;
+        itemCount++;
+        html += '<div class="cart-item">' +
+          '<div class="cart-item-info">' +
+            '<span class="cart-item-title">' + item.title + '</span>' +
+            '<span class="cart-item-price">₦' + item.price.toLocaleString() + '</span>' +
+          '</div>' +
+          '<button class="cart-item-remove" data-id="' + item.id + '">&times;</button>' +
+        '</div>';
+      }
+      cartItems.innerHTML = html;
+
+      var removeBtns = cartItems.querySelectorAll('.cart-item-remove');
+      for (var r = 0; r < removeBtns.length; r++) {
+        removeBtns[r].addEventListener('click', function() {
+          var id = parseInt(this.getAttribute('data-id'));
+          removeFromCart(id);
+        });
+      }
+    }
+  }
+
+  if (cartTotal) {
+    cartTotal.textContent = '₦' + total.toLocaleString();
+  }
+
+  if (cartCount) {
+    cartCount.textContent = itemCount;
+  }
+
+  // ===== SAVE CART TO LOCAL STORAGE AFTER EVERY UPDATE =====
+  saveCartToLocalStorage();
+}
+
+// ===== ADD TO CART =====
+function addToCart(id, title, price) {
+  for (var i = 0; i < cart.length; i++) {
+    if (cart[i].id === id) {
+      showToast('Already in cart');
+      return;
+    }
+  }
+  cart.push({ id: id, title: title, price: price });
+  updateCartUI();
+  showToast('Added to cart');
+  openCart();
+}
+
+// ===== REMOVE FROM CART =====
+function removeFromCart(id) {
+  var newCart = [];
+  for (var i = 0; i < cart.length; i++) {
+    if (cart[i].id !== id) {
+      newCart.push(cart[i]);
+    }
+  }
+  cart = newCart;
+  updateCartUI();
+  if (cart.length === 0) {
+    closeCart();
+  }
+}
+
+// ===== OPEN / CLOSE CART =====
+function openCart() {
+  if (cartSidebar) cartSidebar.classList.add('open');
+  if (cartOverlay) cartOverlay.classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeCart() {
+  if (cartSidebar) cartSidebar.classList.remove('open');
+  if (cartOverlay) cartOverlay.classList.remove('active');
+  document.body.style.overflow = '';
+}
+
+if (cartBtn) {
+  cartBtn.addEventListener('click', function() {
+    if (cartSidebar && cartSidebar.classList.contains('open')) {
+      closeCart();
+    } else {
+      openCart();
+    }
+  });
+}
+
+if (cartClose) cartClose.addEventListener('click', closeCart);
+if (cartOverlay) cartOverlay.addEventListener('click', closeCart);
+
+// ============================================================
+// BROWSE TEMPLATES MODAL
+// ============================================================
+
+function openBrowseModal() {
+  if (browseModal) browseModal.classList.add('open');
+  document.body.style.overflow = 'hidden';
+  renderBrowseList();
+}
+
+function closeBrowseModal() {
+  if (browseModal) browseModal.classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function renderBrowseList() {
+  if (!browseList) return;
+
+  if (TEMPLATES.length === 0) {
+    browseList.innerHTML = '<p class="browse-loading">Loading templates...</p>';
+    return;
+  }
+
+  var cartIds = cart.map(function(item) { return item.id; });
+  var availableTemplates = TEMPLATES.filter(function(t) {
+    return t.price > 0 && cartIds.indexOf(t.id) === -1;
+  });
+
+  if (availableTemplates.length === 0) {
+    browseList.innerHTML = '<p class="browse-empty">All templates are already in your cart.</p>';
+    return;
+  }
+
+  selectedTemplates = [];
+
+  var html = '';
+  for (var i = 0; i < availableTemplates.length; i++) {
+    var t = availableTemplates[i];
+    html += '<div class="browse-item" data-id="' + t.id + '">' +
+      '<div class="browse-item-info">' +
+        '<span class="browse-item-title">' + t.title + '</span>' +
+        '<span class="browse-item-price">₦' + Number(t.price).toLocaleString() + '</span>' +
+      '</div>' +
+      '<div class="browse-item-check" data-id="' + t.id + '"></div>' +
+    '</div>';
+  }
+  browseList.innerHTML = html;
+
+  var browseItems = browseList.querySelectorAll('.browse-item');
+  for (var j = 0; j < browseItems.length; j++) {
+    browseItems[j].addEventListener('click', function() {
+      var id = parseInt(this.getAttribute('data-id'));
+      var check = this.querySelector('.browse-item-check');
+      var index = selectedTemplates.indexOf(id);
+
+      if (index === -1) {
+        selectedTemplates.push(id);
+        check.classList.add('selected');
+      } else {
+        selectedTemplates.splice(index, 1);
+        check.classList.remove('selected');
+      }
+    });
+  }
+}
+
+if (browseBtn) browseBtn.addEventListener('click', openBrowseModal);
+if (browseClose) browseClose.addEventListener('click', closeBrowseModal);
+if (browseOverlay) browseOverlay.addEventListener('click', closeBrowseModal);
+
+if (browseDoneBtn) {
+  browseDoneBtn.addEventListener('click', function() {
+    if (selectedTemplates.length === 0) {
+      showToast('No templates selected');
+      return;
+    }
+
+    for (var i = 0; i < selectedTemplates.length; i++) {
+      var template = TEMPLATES.find(function(t) { return t.id === selectedTemplates[i]; });
+      if (template && template.price > 0) {
+        addToCart(template.id, template.title, template.price);
+      }
+    }
+
+    selectedTemplates = [];
+    closeBrowseModal();
+  });
+}
+
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape' && browseModal && browseModal.classList.contains('open')) {
+    closeBrowseModal();
+  }
+});
+
+// ============================================================
+// CHECKOUT — CART (MODIFIED)
+// ============================================================
+
+var checkoutModal = document.getElementById('checkoutModal');
+var checkoutOverlay = document.getElementById('checkoutOverlay');
+var checkoutClose = document.getElementById('checkoutClose');
+var checkoutForm = document.getElementById('checkoutForm');
+var checkoutEmail = document.getElementById('checkoutEmail');
+var checkoutTotalSpan = document.getElementById('checkoutTotal');
+
+// ===== OPEN CHECKOUT — NOW OPENS PAYSTACK DIRECTLY =====
+function openCheckout() {
+  var total = 0;
+  for (var i = 0; i < cart.length; i++) {
+    total += cart[i].price;
+  }
+
+  if (cart.length === 0) {
+    showToast('Your cart is empty');
+    return;
+  }
+
+  // ===== CHECK IF USER IS LOGGED IN =====
+  if (!currentUser) {
+    window._pendingCartCheckout = true;
+    openAuthModal('login');
+    return;
+  }
+
+  // User is logged in → open Paystack immediately
+  closeCart();
+  proceedToCartCheckout();
+}
+
+function closeCheckout() {
+  if (checkoutModal) {
+    checkoutModal.classList.remove('open');
+  }
+  document.body.style.overflow = '';
+}
+
+if (checkoutBtn) checkoutBtn.addEventListener('click', openCheckout);
+if (checkoutClose) checkoutClose.addEventListener('click', closeCheckout);
+if (checkoutOverlay) checkoutOverlay.addEventListener('click', closeCheckout);
+
+// ===== PAYMENT: PROCEED TO CART CHECKOUT (MODIFIED – added try-catch) =====
+function proceedToCartCheckout() {
+  // ===== DYNAMIC LOADER (kept) =====
+  if (typeof PaystackPop === 'undefined') {
+    showToast('Loading payment library...');
+    var script = document.createElement('script');
+    script.src = 'https://js.paystack.co/v1/inline.js';
+    script.onload = function() {
+      showToast('Payment library loaded. Retrying...');
+      proceedToCartCheckout();
+    };
+    script.onerror = function() {
+      showToast('Failed to load payment library. Check your internet.');
+    };
+    document.head.appendChild(script);
+    return;
+  }
+
+  // ===== CALCULATE TOTAL =====
+  var total = 0;
+  for (var i = 0; i < cart.length; i++) {
+    total += cart[i].price;
+  }
+  var amount = total * 100;
+
+  // ===== PAYSTACK SETUP WITH TRY-CATCH =====
+  try {
+    var handler = PaystackPop.setup({
+      key: CONFIG.PAYSTACK_PUBLIC_KEY,
+      email: currentUser.email,
+      amount: amount,
+      currency: 'NGN',
+      ref: 'CART_' + Date.now() + '_' + Math.random().toString(36).substring(2, 8),
+      // === FIX: regular function (not async) ===
+      callback: function(response) {
+        // Wrap async code inside an IIFE
+        (async function() {
+          showToast('Payment successful! Unlocking your templates...');
+
+          var items = cart.slice();
+          if (items.length === 0) {
+            showToast('Your cart is empty.');
+            return;
+          }
+
+          try {
+            var purchases = items.map(function(item) {
+              return {
+                user_id: currentUser.id,
+                template_id: item.id,
+                reference: response.reference || 'CART_REF'
+              };
+            });
+
+            var { error } = await supabaseClient
+              .from('purchases')
+              .insert(purchases);
+
+            if (error) throw error;
+
+            items.forEach(function(item) {
+              unlockComponent(item.id);
+            });
+
+            cart = [];
+            updateCartUI();
+            closeCheckout();
+            checkoutForm.reset();
+
+            showToast('All templates unlocked! You can now download them from your Profile.');
+
+          } catch (err) {
+            console.error('Failed to record purchases:', err);
+            showToast('Payment succeeded but recording failed. Contact support with ref: ' + response.reference);
+            items.forEach(function(item) {
+              storeFailedTransaction(response.reference, item.id, currentUser.id);
+            });
+          }
+        })(); // end IIFE
+      },
+      onClose: function() {
+        showToast('Payment cancelled');
+      }
+    });
+    handler.openIframe();
+  } catch (err) {
+    console.error('Paystack setup error:', err);
+    showToast('Payment setup failed: ' + err.message);
+  }
+}
+
+if (checkoutForm) {
+  checkoutForm.addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    var total = 0;
+    for (var i = 0; i < cart.length; i++) {
+      total += cart[i].price;
+    }
+
+    if (cart.length === 0) {
+      showToast('Your cart is empty');
+      return;
+    }
+
+    var email = checkoutEmail.value.trim();
+    if (!email || !email.includes('@')) {
+      showToast('Please enter a valid email address');
+      return;
+    }
+
+    if (currentUser && email !== currentUser.email) {
+      showToast('Please use the email associated with your account');
+      return;
+    }
+
+    if (currentUser) {
+      proceedToCartCheckout();
+    } else {
+      window._pendingCartCheckout = true;
+      openAuthModal('login');
+    }
+  });
+}
+
+// ============================================================
+// INIT — LAST THING THAT RUNS
+// ============================================================
+
 async function initializeApp() {
+  // ===== LOAD CART FROM LOCAL STORAGE ON STARTUP (NEW) =====
+  loadCartFromLocalStorage();
+  updateCartUI();
+
   if (footerYear) footerYear.textContent = new Date().getFullYear();
 
   var banner = document.getElementById('offlineBanner');
@@ -879,4 +1337,5 @@ async function initializeApp() {
   }
 }
 
+// ===== THIS IS THE LAST THING THAT RUNS =====
 initializeApp();
