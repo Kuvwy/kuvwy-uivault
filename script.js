@@ -94,7 +94,7 @@ function updateProfileNavLinks() {
   const mobileNavProfile = document.getElementById('mobileNavProfile');
   const show = !!currentUser;
   if (navProfile) navProfile.style.display = show ? 'inline-block' : 'none';
-  if (mobileNavProfile) mobileNavProfile.style.display = show ? 'block' : 'none';
+  if (mobileNavProfile) mobileNavProfile.style.display = show ? 'flex' : 'none';
 }
 
 // ===== UNLOCK HELPERS (local cache + server validation) =====
@@ -499,7 +499,7 @@ function buildCard(template, isPremium) {
       ${premiumBadge}
     </div>
     <div class="card-body">
-      <div class="card-meta">${tagMarkup}</div>
+      <div class="card-meta">${tagMarkup}<span class="card-tag single-page-tag">Single Page</span></div>
       <h2 class="card-title">${template.title}</h2>
     </div>
   `;
@@ -512,7 +512,19 @@ function renderGrid() {
   const freeCount = state.free.length;
   const premiumCount = state.premium.length;
   const total = freeCount + premiumCount;
-  resultsCount.innerHTML = `Showing <strong>${total}</strong> template${total !== 1 ? 's' : ''}`;
+  resultsCount.innerHTML = `Showing <strong id="countNum">0</strong> template${total !== 1 ? 's' : ''}`;
+const countEl = document.getElementById('countNum');
+const duration = 1200;
+const steps = 50;
+const increment = total / steps;
+let current = 0;
+let step = 0;
+const timer = setInterval(() => {
+  step++;
+  current = step === steps ? total : Math.round(increment * step);
+  countEl.textContent = current;
+  if (step >= steps) clearInterval(timer);
+}, duration / steps);
 
   if (total === 0) {
     emptyState.hidden = false;
@@ -561,22 +573,48 @@ filterBtns.forEach(btn => {
     runFilter();
   });
 });
-
 // ===== HAMBURGER =====
+const mobileNavBackdrop = document.getElementById("mobileNavBackdrop");
+
+function openNav() {
+  mobileNav.classList.add("open");
+  hamburger.classList.add("open");
+  mobileNavBackdrop.classList.add("active");
+  document.body.style.overflow = "hidden";
+}
+
+function closeNav() {
+  mobileNav.classList.remove("open");
+  hamburger.classList.remove("open");
+  mobileNavBackdrop.classList.remove("active");
+  document.body.style.overflow = "";
+}
+
 if (hamburger) {
   hamburger.addEventListener("click", () => {
-    hamburger.classList.toggle("open");
-    mobileNav.classList.toggle("open");
+    mobileNav.classList.contains("open") ? closeNav() : openNav();
   });
 }
+
+document.getElementById("mobileNavClose")?.addEventListener("click", closeNav);
+mobileNavBackdrop?.addEventListener("click", closeNav);
+
 if (mobileNav) {
   mobileNav.querySelectorAll("a").forEach(link => {
-    link.addEventListener("click", () => {
-      hamburger?.classList.remove("open");
-      mobileNav.classList.remove("open");
-    });
+    link.addEventListener("click", closeNav);
   });
 }
+// Close button inside sheet
+document.getElementById('mobileNavClose')?.addEventListener('click', () => {
+  hamburger?.classList.remove('open');
+  mobileNav?.classList.remove('open');
+});
+
+// Backdrop tap to close
+document.getElementById('mobileNavBackdrop')?.addEventListener('click', () => {
+  hamburger?.classList.remove('open');
+  mobileNav?.classList.remove('open');
+});
 
 // ===== SCROLL HELPERS =====
 function scrollToSection(id) {
@@ -830,6 +868,7 @@ document.addEventListener('keydown', (e) => {
     if (profileModal && !profileModal.hidden) { closeProfile(); return; }
     const browseModal = document.getElementById('browseModal');
     if (browseModal && browseModal.classList.contains('open')) { closeBrowseModal(); return; }
+    if (mobileNav && mobileNav.classList.contains('open')) { closeNav(); return; }
   }
 });
 /* ============================================================
@@ -903,7 +942,67 @@ document.querySelectorAll('.eye-btn').forEach(btn => {
 document.querySelectorAll('.auth-tab').forEach(tab => {
   tab.addEventListener('click', () => switchAuthTab(tab.dataset.tab));
 });
+// ===== FORGOT PASSWORD =====
+const formLogin = document.getElementById('formLogin');
+const formForgot = document.getElementById('formForgot');
+const forgotLink = document.getElementById('forgotPasswordLink');
+const backToLogin = document.getElementById('backToLogin');
+const forgotSubmit = document.getElementById('forgotSubmit');
+const forgotEmail = document.getElementById('forgotEmail');
+const forgotError = document.getElementById('forgotError');
+const forgotSuccess = document.getElementById('forgotSuccess');
 
+function showForgotView() {
+  formLogin.hidden = true;
+  formForgot.hidden = false;
+  document.getElementById('tabLogin').style.display = 'none';
+  document.getElementById('tabSignup').style.display = 'none';
+  forgotEmail.value = '';
+  forgotError.hidden = true;
+  forgotSuccess.hidden = true;
+}
+
+function showLoginView() {
+  formForgot.hidden = true;
+  formLogin.hidden = false;
+  document.getElementById('tabLogin').style.display = '';
+  document.getElementById('tabSignup').style.display = '';
+}
+
+if (forgotLink) forgotLink.addEventListener('click', showForgotView);
+if (backToLogin) backToLogin.addEventListener('click', showLoginView);
+
+if (forgotSubmit) {
+  forgotSubmit.addEventListener('click', async function() {
+    const email = forgotEmail.value.trim();
+    forgotError.hidden = true;
+    forgotSuccess.hidden = true;
+
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      forgotError.textContent = 'Please enter a valid email address.';
+      forgotError.hidden = false;
+      return;
+    }
+
+    forgotSubmit.disabled = true;
+    forgotSubmit.textContent = 'Sending...';
+
+    try {
+      const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+        redirectTo: window.location.origin + '/reset-password.html'
+      });
+
+      // Always show success — never reveal if email exists
+      forgotSuccess.hidden = false;
+      forgotEmail.value = '';
+    } catch (err) {
+      forgotSuccess.hidden = false; // still show success for security
+    } finally {
+      forgotSubmit.disabled = false;
+      forgotSubmit.textContent = 'Send Reset Link';
+    }
+  });
+}
 document.querySelectorAll('.auth-switch-link').forEach(link => {
   link.addEventListener('click', () => switchAuthTab(link.dataset.switch));
 });
@@ -1365,6 +1464,7 @@ function showOnlineBanner(message = 'Online') {
   }, 2500);
 }
 
+
 // ===== INITIALIZE APP =====
 async function initializeApp() {
   // Load cart from localStorage
@@ -1412,7 +1512,24 @@ async function initializeApp() {
 
   // Online: fetch from Supabase
   try {
-    resultsCount.innerHTML = 'UI Vault is loading…';
+    resultsCount.innerHTML = '';
+document.getElementById('freeGrid').innerHTML = `
+  <div class="skeleton-grid">
+    ${Array(6).fill(`
+      <div class="skeleton-card">
+        <div class="skeleton-thumb"></div>
+        <div class="skeleton-body">
+          <div class="skeleton-line full"></div>
+          <div class="skeleton-line medium"></div>
+          <div class="skeleton-line short"></div>
+        </div>
+        <div class="skeleton-footer">
+          <div class="skeleton-badge"></div>
+          <div class="skeleton-btn"></div>
+        </div>
+      </div>
+    `).join('')}
+  </div>`;
     const { data, error } = await supabaseClient
       .from('templates')
       .select('*');

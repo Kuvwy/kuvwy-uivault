@@ -31,6 +31,7 @@
 </head>
 <body>
   <!-- ===== HEADER ===== -->
+<!-- ===== HEADER ===== -->
 <header class="site-header">
   <div class="header-inner">
     <p class="logo"><span class="logo-dot"></span>UIVault by Kuvwy</p>
@@ -43,7 +44,6 @@
     </nav>
 
     <div class="header-actions">
-      <!-- Cart Button -->
       <button class="cart-btn" id="cartBtn" aria-label="Open shopping cart">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
           <circle cx="9" cy="21" r="1.5"/>
@@ -53,46 +53,95 @@
         <span class="cart-count" id="cartCount">0</span>
       </button>
 
-      <!-- Hamburger -->
       <button class="hamburger" id="hamburger" aria-label="Toggle navigation menu" aria-expanded="false">
-        <span></span><span></span><span></span>
-      </button>
+  <svg width="20" height="14" viewBox="0 0 20 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect width="20" height="2" rx="1" fill="currentColor"/>
+    <rect y="6" width="20" height="2" rx="1" fill="currentColor"/>
+    <rect y="12" width="20" height="2" rx="1" fill="currentColor"/>
+  </svg>
+</button>
     </div>
   </div>
-
-  <!-- Mobile Navigation -->
-  <div class="mobile-nav" id="mobileNav" role="navigation" aria-label="Mobile navigation">
-    <a href="#" id="mobileNavFree">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
-      Free Vault
-    </a>
-    <a href="#" id="mobileNavPremium">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-      Premium Vault
-    </a>
-    <a href="#" id="mobileNavAbout">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-      About Kuvwy
-    </a>
-    <a href="#" id="mobileNavProfile">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-      My Vault
-    </a>
-  </div>
 </header>
+
+<!-- ===== MOBILE NAV – MOVED OUTSIDE HEADER (FIXES position:fixed) ===== -->
+<!-- ===== MOBILE NAV – CLEAN & BRAND-ALIGNED ===== -->
+<div class="mobile-nav-backdrop" id="mobileNavBackdrop"></div>
+<div class="mobile-nav" id="mobileNav" role="navigation" aria-label="Mobile navigation">
+    
+    <!-- Close button -->
+    <button class="mobile-nav-close" id="mobileNavClose" aria-label="Close menu">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <line x1="18" y1="6" x2="6" y2="18"/>
+        <line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+
+    <!-- Brand -->
+    <div class="mobile-nav-brand">
+      <span class="logo-dot"></span> UIVault
+    </div>
+
+    <!-- Links -->
+<nav class="mobile-nav-links">
+  <a href="#" id="mobileNavFree">
+    <span class="mnav-icon">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+    </span>
+    <span class="mnav-text">
+      <span class="mnav-label">Free Vault</span>
+      <span class="mnav-sub">Browse free templates</span>
+    </span>
+    <span class="mnav-arrow">›</span>
+  </a>
+  <a href="#" id="mobileNavPremium">
+    <span class="mnav-icon">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+    </span>
+    <span class="mnav-text">
+      <span class="mnav-label">Premium Vault</span>
+      <span class="mnav-sub">Pro-grade designs</span>
+    </span>
+    <span class="mnav-arrow">›</span>
+  </a>
+  <a href="#" id="mobileNavAbout">
+    <span class="mnav-icon">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    </span>
+    <span class="mnav-text">
+      <span class="mnav-label">About Kuvwy</span>
+      <span class="mnav-sub">Our story & mission</span>
+    </span>
+    <span class="mnav-arrow">›</span>
+  </a>
+  <a href="#" id="mobileNavProfile">
+    <span class="mnav-icon">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    </span>
+    <span class="mnav-text">
+      <span class="mnav-label">My Vault</span>
+      <span class="mnav-sub">Your purchases</span>
+    </span>
+    <span class="mnav-arrow">›</span>
+  </a>
+</nav>
+
+    <!-- Footer -->
+    <p class="mobile-nav-footer">© 2026 Kuvwy</p>
+  </div>
 <!-- ===== SEARCH / HERO ===== -->
 <section class="search-zone">
   <div class="hero-text">
     <p class="hero-tag">Ship faster. Build smarter.</p>
-    <h1>No Wahala<br /><span class="accent">High Quality</span><br>Get it in seconds</h1>
-<p class="hero-sub">Looking for high-quality website templates without breaking the bank? We've got you covered. Premium designs, affordable prices, zero whahala.</p>
+    <h1>No Whahala<br /><span class="accent">High Quality</span><br>Get it in seconds</h1>
+<p class="hero-sub">Built for developers who move fast. No bloat, no subscriptions. Just clean code you own forever.</p>
   </div>
 
   <div class="search-wrapper">
     <span class="search-icon" aria-hidden="true">
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
     </span>
-    <input type="text" id="searchInput" class="search-input" placeholder="Search templates " autocomplete="off" spellcheck="false" aria-label="Search templates" />
+    <input type="text" id="searchInput" class="search-input" placeholder="Search templates" autocomplete="off" spellcheck="false" aria-label="Search templates" />
   </div>
 
   <div class="filter-bar" role="group" aria-label="Filter templates">
@@ -236,65 +285,82 @@
     </div>
   </div>
 </div>
- <!-- ===== FEATURES SECTION ===== -->
 <!-- ===== FEATURES SECTION ===== -->
-<section class="features-section">
-  <div class="features-grid">
+<div class="features-track-wrapper">
+  <div class="features-track">
     <div class="feature-card">
       <div class="feature-icon">
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
-        </svg>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
       </div>
       <h3>Ready to Deploy</h3>
       <p>No setup. Just download zip, paste, and launch.</p>
     </div>
     <div class="feature-card">
       <div class="feature-icon">
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-          <polyline points="14 2 14 8 20 8"/>
-          <line x1="16" y1="13" x2="8" y2="13"/>
-          <line x1="16" y1="17" x2="8" y2="17"/>
-          <polyline points="10 9 9 9 8 9"/>
-        </svg>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
       </div>
       <h3>Everything Included</h3>
-      <p>HTML, CSS, and JS – all in one ZIP.</p>
+      <p>HTML, CSS, and JS — all in one ZIP.</p>
     </div>
     <div class="feature-card">
       <div class="feature-icon">
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-          <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-        </svg>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
       </div>
       <h3>Secure Payments</h3>
       <p>Paystack protected. Your data stays safe.</p>
     </div>
     <div class="feature-card">
       <div class="feature-icon">
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
-          <line x1="8" y1="21" x2="16" y2="21"/>
-          <line x1="12" y1="17" x2="12" y2="21"/>
-        </svg>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
       </div>
       <h3>Mobile Responsive</h3>
       <p>Works on every screen, out of the box.</p>
     </div>
     <div class="feature-card">
       <div class="feature-icon">
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-          <polyline points="9 12 11 14 15 10"/>
-        </svg>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
+      </div>
+      <h3>Money-Back Guarantee</h3>
+      <p>Full refund within 3-10 days. Risk-free.</p>
+    </div>
+    <!-- Duplicate set for seamless loop -->
+    <div class="feature-card">
+      <div class="feature-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+      </div>
+      <h3>Ready to Deploy</h3>
+      <p>No setup. Just download zip, paste, and launch.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+      </div>
+      <h3>Everything Included</h3>
+      <p>HTML, CSS, and JS — all in one ZIP.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      </div>
+      <h3>Secure Payments</h3>
+      <p>Paystack protected. Your data stays safe.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+      </div>
+      <h3>Mobile Responsive</h3>
+      <p>Works on every screen, out of the box.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
       </div>
       <h3>Money-Back Guarantee</h3>
       <p>Full refund within 3-10 days. Risk-free.</p>
     </div>
   </div>
-</section>
+</div>
   <!-- ===== FOOTER ===== -->
   <footer class="site-footer" id="aboutSection">
     <div class="about-block">
@@ -306,7 +372,7 @@ Our goal is to help developers, startups, and businesses build faster with clean
       <br><br><br>
     </div>
     <!-- === ADDED footerYear span for dynamic year === -->
-    <p>&copy; <span id="footerYear">2026</span> <strong>Kuvwy</strong> &middot; <span>all right reserved</span></span></p>
+    <p>&copy; <span id="footerYear">2026</span> <strong>Kuvwy</strong> &middot; <span>All rights reserved</span></p>
   </footer>
   <!-- ===== PREVIEW MODAL ===== -->
   <div id="previewModal" class="modal" role="dialog" aria-label="Live preview" aria-modal="true" hidden>
@@ -355,6 +421,7 @@ Our goal is to help developers, startups, and businesses build faster with clean
           </button>
         </div>
         <p class="auth-error" id="loginError" hidden></p>
+        <p class="auth-forgot"><span class="auth-forgot-link" id="forgotPasswordLink">Forgot password?</span></p>
         <button class="auth-submit" id="loginSubmit">Log In</button>
         <p class="auth-switch">Don't have an account? <span class="auth-switch-link" data-switch="signup">Join Kuvwy</span></p>
       </div>
@@ -375,6 +442,15 @@ Our goal is to help developers, startups, and businesses build faster with clean
         <p class="auth-error" id="signupError" hidden></p>
         <button class="auth-submit" id="signupSubmit">Create Account</button>
         <p class="auth-switch">Already have an account? <span class="auth-switch-link" data-switch="login">Log In</span></p>
+      </div>
+      <div class="auth-form" id="formForgot" role="tabpanel" hidden>
+        <p class="auth-subtitle">Enter your email and we'll send you a reset link.</p>
+        <label class="auth-label" for="forgotEmail">Email</label>
+        <input type="email" id="forgotEmail" class="auth-input" placeholder="you@example.com" autocomplete="email" />
+        <p class="auth-error" id="forgotError" hidden></p>
+        <p class="auth-success-msg" id="forgotSuccess" hidden>Check your email — a reset link is on its way.</p>
+        <button class="auth-submit" id="forgotSubmit">Send Reset Link</button>
+        <p class="auth-switch"><span class="auth-switch-link" id="backToLogin">← Back to Log In</span></p>
       </div>
     </div>
   </div>
