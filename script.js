@@ -989,7 +989,7 @@ if (forgotSubmit) {
 
     try {
       const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
-        redirectTo: window.location.origin + '/reset-password.html'
+        redirectTo: 'https://kuvwy.github.io/kuvwy-uivault/reset-password.html'
       });
 
       // Always show success — never reveal if email exists
