@@ -166,73 +166,31 @@ img {
   border: none !important;
   cursor: pointer !important;
   border-radius: 8px !important;
-  transition: background 0.2s ease !important;
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+              opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+              background 0.2s ease !important;
 }
 
 .hamburger:hover {
   background: rgba(0, 0, 0, 0.04) !important;
 }
 
-.hamburger span {
-  display: block !important;
-  width: 20px !important;
-  height: 2px !important;
-  background: #050505 !important;
-  border-radius: 2px !important;
-  transition: all 0.3s ease !important;
-  transform-origin: center !important;
+/* When menu is open: the whole button sinks + fades */
+.hamburger.open {
+  transform: translateY(20px) scale(0.6);
+  opacity: 0;
+  pointer-events: none;
 }
 
-.hamburger span:nth-child(2) {
-  width: 16px !important;
-  margin: 0 auto !important;
+/* Keep the SVG rects straight (no rotation) */
+.hamburger.open svg rect {
+  transform: none !important;
 }
 
-.hamburger span:nth-child(3) {
-  width: 12px !important;
-  margin: 0 auto !important;
-}
-
-.hamburger.open span:nth-child(1) {
-  transform: translateY(6px) rotate(45deg) !important;
-  width: 20px !important;
-  background: #d97706 !important;
-}
-
-.hamburger.open span:nth-child(2) {
-  opacity: 0 !important;
-  transform: scaleX(0) !important;
-  width: 20px !important;
-}
-
-.hamburger.open span:nth-child(3) {
-  transform: translateY(-6px) rotate(-45deg) !important;
-  width: 20px !important;
-  background: #d97706 !important;
-}
-
-.hamburger-label {
-  font-size: 0.8rem !important;
-  font-weight: 500 !important;
-  color: #65676b !important;
-  letter-spacing: 0.03em !important;
-  transition: color 0.2s !important;
-}
-
-.hamburger:hover .hamburger-label {
-  color: #050505 !important;
-}
-
-.hamburger.open .hamburger-label {
-  color: #d97706 !important;
-}
+/* The SVG itself should not have its own transform – inherit from parent */
 .hamburger svg {
-  transition: transform var(--transition);
-  color: var(--text-primary);
-}
-
-.hamburger.open svg {
-  transform: rotate(90deg);
+  display: block;
+  /* no transition needed here, parent handles it */
 }
 
 /* ===== MOBILE NAV (Professional Overlay) ===== */
@@ -330,9 +288,6 @@ img {
   border-bottom: 1px solid var(--border);
 }
 
-.mobile-nav-links a:last-child {
-  border-bottom: none;
-}
 
 .mobile-nav-links a:hover {
   background: var(--bg-secondary);
@@ -393,7 +348,6 @@ img {
 /* Footer */
 .mobile-nav-footer {
   padding: 16px 20px;
-  border-top: 1px solid var(--border);
   font-size: 0.75rem;
   color: var(--text-muted);
   letter-spacing: 0.02em;
@@ -502,7 +456,10 @@ img {
   font-size: 1.05rem;
   font-weight: 400;
   outline: none;
-  transition: all var(--transition);
+  transition: transform 0.25s cubic-bezier(0.25, 1, 0.5, 1),
+              border-color 0.25s cubic-bezier(0.25, 1, 0.5, 1),
+              box-shadow 0.25s cubic-bezier(0.25, 1, 0.5, 1),
+              background 0.25s ease;
   box-shadow: var(--shadow-sm);
 }
 
@@ -512,8 +469,12 @@ img {
 
 .search-input:focus {
   border-color: var(--kuvwy-orange);
-  box-shadow: 0 0 0 4px rgba(217, 119, 6, 0.08);
+  outline: none;
+  box-shadow: 0 8px 24px rgba(217, 119, 6, 0.12), 0 2px 8px rgba(217, 119, 6, 0.06);
   background: var(--bg);
+  transform: translateY(-3px);  /* THIS LIFTS IT UP */
+  transition: transform 0.25s cubic-bezier(0.25, 1, 0.5, 1),
+              box-shadow 0.25s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
 .search-shortcut {
@@ -891,7 +852,6 @@ img {
   gap: 12px;
   margin-bottom: 40px;
   padding-bottom: 30px;
-  border-bottom: 1px solid #e4e4e7;
 }
 
 .btn-buy {
@@ -2156,7 +2116,6 @@ img {
    ============================================================ */
 
 .site-footer {
-  border-top: 1px solid var(--border);
   padding: 32px 24px;
   text-align: center;
 }
@@ -2680,4 +2639,15 @@ img {
 
 .auth-success-msg[hidden] {
   display: none;
+}
+.detail-desc {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 600;
+  font-style: italic;
+  color: var(--text-primary);
+  line-height: 1.8;
+  padding: 0 8px;
+  border-left: 3px solid var(--kuvwy-orange);
+  padding-left: 16px;
 }
