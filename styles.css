@@ -2651,3 +2651,225 @@ img {
   border-left: 3px solid var(--kuvwy-orange);
   padding-left: 16px;
 }
+/* ============================================================
+   DETAIL VIEW — CLEAN & INTENTIONAL
+   ============================================================ */
+
+.detail-view {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 40px 20px 80px;
+  animation: fadeIn 0.5s ease forwards;
+}
+
+.detail-container {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 32px;
+  background: #ffffff;
+  border-radius: 14px;
+  border: 1px solid #e4e4e7;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  padding: 24px;
+  overflow: hidden;
+}
+
+@media (min-width: 768px) {
+  .detail-container {
+    grid-template-columns: 2fr 1fr;
+    gap: 40px;
+    padding: 40px;
+  }
+}
+
+.back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #65676b;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.25s ease, color 0.25s ease;
+  margin: 0 0 8px 0;
+}
+
+.back-btn:hover {
+  transform: translateX(-4px);
+  color: var(--kuvwy-orange);
+}
+
+.detail-header {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.detail-badges {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+
+.detail-title {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(1.5rem, 4vw, 2.8rem);
+  font-weight: 700;
+  color: #050505;
+  margin: 0;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.template-price {
+  font-size: clamp(1.6rem, 3vw, 2.2rem);
+  font-weight: 800;
+  color: var(--kuvwy-orange);
+  margin: 4px 0 8px 0;
+}
+
+.description-card {
+  background: var(--bg-secondary);
+  padding: 16px 20px;
+  border-radius: var(--radius-md);
+  border-left: 4px solid var(--kuvwy-orange);
+  margin: 8px 0;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.description-card .detail-desc {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.7;
+  color: var(--text-secondary);
+  font-style: italic;
+  font-weight: 400;
+}
+
+.included-section {
+  margin-top: 16px;
+}
+
+.included-section h3 {
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+}
+
+.included-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.included-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  padding: 8px 12px;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.included-item span:first-child {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.detail-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.detail-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.detail-actions .btn-primary,
+.detail-actions .btn-buy,
+.detail-actions .btn-secondary {
+  width: 100%;
+  justify-content: center;
+  text-align: center;
+  padding: 14px;
+  font-size: 1rem;
+}
+
+.detail-actions .btn-buy {
+  background: var(--kuvwy-gradient);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-md);
+  font-weight: 700;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.detail-actions .btn-buy:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(26, 58, 92, 0.3);
+}
+
+/* ===== MOBILE OVERRIDES ===== */
+@media (max-width: 768px) {
+  .detail-view {
+    padding: 20px 12px 100px;
+  }
+
+  .detail-container {
+    padding: 16px;
+    gap: 20px;
+  }
+
+  .detail-title {
+    font-size: 1.4rem;
+  }
+
+  .template-price {
+    font-size: 1.4rem;
+  }
+
+  .detail-desc {
+    font-size: 0.9rem;
+  }
+
+  .included-item {
+    font-size: 0.82rem;
+    padding: 6px 10px;
+  }
+
+  /* Override old sticky action bar */
+  .detail-actions {
+    position: static !important;
+    background: none !important;
+    padding: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+
+  .detail-actions .btn-primary,
+  .detail-actions .btn-buy,
+  .detail-actions .btn-secondary {
+    font-size: 0.9rem;
+    padding: 12px;
+  }
+}

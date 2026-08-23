@@ -176,6 +176,7 @@
     <p class="empty-sub">Try a different keyword or clear the search.</p>
   </div>
 </main>
+
 <!-- ===== TEMPLATE DETAIL VIEW ===== -->
 <section id="templateDetailView" class="detail-view" hidden>
   <div class="detail-container">
@@ -188,36 +189,63 @@
       Back to Templates
     </button>
 
-    <div class="detail-content">
-      <div class="detail-header">
-        <div class="detail-badges">
-          <span id="detailCategoryBadge" class="card-tag">SaaS</span>
-          <span id="detailPriceBadge" class="card-tag price-tag">₦3,000</span>
-        </div>
-        <h1 id="detailTitle" class="detail-title">Template Title</h1>
-        <p id="detailDescription" class="detail-desc">
-  <span class="quote-mark">"</span>
-  <span id="detailDescriptionText">Description goes here...</span>
-  <span class="quote-mark">"</span>
-</p>
+    <div class="detail-header">
+      <div class="detail-badges">
+        <span id="detailCategoryBadge" class="card-tag">SaaS</span>
+        <span id="detailPriceBadge" class="card-tag price-tag">₦3,000</span>
+      </div>
+      <h1 id="detailTitle" class="detail-title">Template Title</h1>
+      <p class="template-price" id="detailPriceDisplay">₦0</p>
 
-        <div class="detail-actions">
-          <button id="detailPreviewBtn" class="btn-primary">Live Preview</button>
-          <button id="detailBuyBtn" class="btn-buy">Buy Now</button>
-          <!-- === NEW: Add to Cart button (was missing in original) === -->
-          <button id="detailAddToCartBtn" class="btn-secondary">Add to Cart</button>
-          <button id="detailCopyBtn" class="btn-secondary" hidden>Copy Source Code</button>
-        </div>
+      <div class="description-card">
+        <p id="detailDescription" class="detail-desc">Description goes here...</p>
       </div>
 
-      <div class="detail-features">
-        <h3>What's included in the ZIP:</h3>
-        <ul id="detailFeaturesList">
-          <li>High-quality HTML5 structure</li>
-          <li>Modern CSS3 styling</li>
-          <li>Responsive JavaScript functionality</li>
-          <li>Optimised assets and icons</li>
-        </ul>
+      <div class="included-section">
+        <h3>What's Included in the ZIP</h3>
+        <div class="included-list">
+          <div class="included-item">
+            <span>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+            </span>
+            High-quality HTML5 structure
+          </div>
+          <div class="included-item">
+            <span>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+            </span>
+            Modern CSS3 styling
+          </div>
+          <div class="included-item">
+            <span>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+            </span>
+            Responsive JavaScript functionality
+          </div>
+          <div class="included-item">
+            <span>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+            </span>
+            Optimised assets and icons
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="detail-sidebar">
+      <div class="detail-actions">
+        <button id="detailPreviewBtn" class="btn-primary">Live Preview</button>
+        <button id="detailBuyBtn" class="btn-buy">Buy Now</button>
+        <button id="detailAddToCartBtn" class="btn-secondary">Add to Cart</button>
+        <button id="detailCopyBtn" class="btn-secondary" hidden>Download ZIP</button>
       </div>
     </div>
   </div>
