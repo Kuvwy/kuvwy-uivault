@@ -161,7 +161,6 @@ function storeFailedTransaction(reference, templateId, userId) {
     timestamp: new Date().toISOString()
   });
   localStorage.setItem('failed_transactions', JSON.stringify(failed));
-  showToast('REF: ' + reference);
 }
 /* ============================================================
    UI VAULT — SCRIPT — PART 3
