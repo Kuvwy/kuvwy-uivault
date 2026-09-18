@@ -2673,6 +2673,19 @@ img {
   padding: 24px;
   overflow: hidden;
 }
+.detail-preview-image {
+  width: 100%;
+  min-height: 240px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #f5f5f5;
+  grid-column: 1 / -1;
+}
+.detail-preview-image {
+    grid-column: 1;
+    grid-row: 1 / 3;
+    min-height: 420px;
+}
 
 @media (min-width: 768px) {
   .detail-container {

@@ -161,6 +161,7 @@ function storeFailedTransaction(reference, templateId, userId) {
     timestamp: new Date().toISOString()
   });
   localStorage.setItem('failed_transactions', JSON.stringify(failed));
+  showToast('REF: ' + reference);
 }
 /* ============================================================
    UI VAULT — SCRIPT — PART 3
@@ -774,6 +775,15 @@ document.getElementById('previewBackdrop').addEventListener('click', closePrevie
 async function openDetailView(template) {
   currentDetailTemplate = template;
   document.getElementById('detailTitle').textContent = template.title;
+  const previewImg = document.getElementById('detailPreviewImage');
+  if (previewImg) {
+    const accent = template.accent || '#d97706';
+    if (template.thumbnail_url) {
+      previewImg.innerHTML = `<img src="${template.thumbnail_url}" alt="${template.title}" style="width:100%;height:100%;object-fit:cover;border-radius:8px;" />`;
+    } else {
+      previewImg.innerHTML = `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,${accent}15,${accent}08);border-radius:8px;font-family:'DM Mono',monospace;font-size:0.75rem;color:${accent};text-transform:uppercase;letter-spacing:0.1em;">// ${template.category}</div>`;
+    }
+  }
   document.getElementById('detailDescription').textContent = template.description || 'No description available.';
   document.getElementById('detailCategoryBadge').textContent = template.category;
 
