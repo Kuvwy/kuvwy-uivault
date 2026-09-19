@@ -304,8 +304,10 @@
   <div class="toast" id="toast"></div>
   <script>
     const SUPABASE_URL = 'https://umfwvksnaqgtjvkgpgow.supabase.co';
-    const SUPABASE_ANON_KEY = 'sb_publishable_W9XISd-bgINvMvzqe6Xe3g_vBxyTa8p';
-    const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVtZnd2a3NuYXFndGp2a2dwZ293Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1MTE5MTMsImV4cCI6MjA5NjA4NzkxM30.TNjDua10Xy1xo206yau6jjDdPJN5PRQTmOmE-l5Cte0';
+    const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  auth: { persistSession: true, autoRefreshToken: true }
+});
 
     let currentUser = null;
     let contributorRecord = null;
@@ -354,6 +356,7 @@
       }
 
       contributorRecord = data;
+      console.log('Contributor record:', JSON.stringify(data));
       document.getElementById('onboardingSection').style.display = 'none';
       document.getElementById('authWall').style.display = 'none';
       document.getElementById('dashboardSection').style.display = 'block';
@@ -438,13 +441,13 @@
     }
 
     async function loadMyTemplates() {
-      const { data, error } = await sb
+     const { data, error } = await sb
         .from('templates')
-        .select('id, title, category, price, thumbnail_url, created_at')
-        .eq('contributor_id', contributorRecord.id)
+        .select('id, title, category, price, thumbnail_url, created_at, contributor_id')
         .order('created_at', { ascending: false });
 
       const list = document.getElementById('myTemplatesList');
+    console.log('Templates query result:', JSON.stringify({error, data}));
       if (error || !data || data.length === 0) {
         list.innerHTML = '<div class="empty-state">No templates yet. Submit your first one!</div>';
         document.getElementById('statTemplates').textContent = '0';
