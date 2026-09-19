@@ -202,6 +202,8 @@ function proceedToSingleCheckout(template) {
       amount: amount,
       currency: 'NGN',
       ref: ref,
+      subaccount: template.subaccount_code || undefined,
+      bearer: 'account',
       callback: function(response) {
         // Wrap async in IIFE
         (async function() {
@@ -1327,16 +1329,12 @@ document.getElementById('checkoutBtn').addEventListener('click', openCheckout);
 document.getElementById('checkoutClose').addEventListener('click', closeCheckout);
 document.getElementById('checkoutOverlay').addEventListener('click', closeCheckout);
 
-// ===== PROCEED TO CART CHECKOUT (PAYSTACK POPUP) =====
-function proceedToCartCheckout() {
+async function proceedToCartCheckout() {
   if (typeof PaystackPop === 'undefined') {
     showToast('Loading payment library...');
     const script = document.createElement('script');
     script.src = 'https://js.paystack.co/v1/inline.js';
-    script.onload = () => {
-      showToast('Payment library loaded. Retrying...');
-      proceedToCartCheckout();
-    };
+    script.onload = () => { showToast('Payment library loaded. Retrying...'); proceedToCartCheckout(); };
     script.onerror = () => { showToast('Failed to load payment library.'); };
     document.head.appendChild(script);
     return;
@@ -1346,6 +1344,13 @@ function proceedToCartCheckout() {
   const amount = total * 100;
   const ref = 'CART_' + Date.now() + '_' + Math.random().toString(36).substring(2, 8);
 
+  // Get subaccount code if cart has one contributor template
+  let subaccountCode = undefined;
+  if (cart.length === 1) {
+    const t = TEMPLATES.find(tmpl => tmpl.id === cart[0].id);
+    if (t && t.subaccount_code) subaccountCode = t.subaccount_code;
+  }
+
   try {
     const handler = PaystackPop.setup({
       key: CONFIG.PAYSTACK_PUBLIC_KEY,
@@ -1353,20 +1358,17 @@ function proceedToCartCheckout() {
       amount: amount,
       currency: 'NGN',
       ref: ref,
+      subaccount: subaccountCode,
+      bearer: subaccountCode ? 'account' : undefined,
       callback: function(response) {
         (async function() {
           showToast('Verifying cart payment securely...');
           const items = cart.slice();
           if (items.length === 0) return;
-
           try {
-            // Get current session token for secure Edge Function call
             const { data: sessionData } = await supabaseClient.auth.getSession();
             const session = sessionData.session;
-            
             const templateIds = items.map(item => item.id);
-
-            // Call your secure backend Edge Function
             const verifyRes = await fetch(CONFIG.SUPABASE_URL + '/functions/v1/verify-purchase', {
               method: 'POST',
               headers: {
@@ -1380,18 +1382,16 @@ function proceedToCartCheckout() {
                 cart_total: total
               })
             });
-
             const verifyResult = await verifyRes.json();
-
             if (verifyResult.success) {
               items.forEach(item => unlockComponent(item.id));
               cart = [];
               updateCartUI();
               closeCheckout();
               document.getElementById('checkoutForm').reset();
-              showToast('All templates unlocked! You can now download them from your Profile.');
+              showToast('All templates unlocked! Download from your Profile.');
             } else {
-               throw new Error(verifyResult.error || 'Backend verification failed.');
+              throw new Error(verifyResult.error || 'Backend verification failed.');
             }
           } catch (err) {
             console.error('Failed to verify purchases:', err);
@@ -1400,9 +1400,7 @@ function proceedToCartCheckout() {
           }
         })();
       },
-      onClose: function() {
-        showToast('Payment cancelled');
-      }
+      onClose: function() { showToast('Payment cancelled'); }
     });
     handler.openIframe();
   } catch (err) {
@@ -1410,7 +1408,6 @@ function proceedToCartCheckout() {
     showToast('Payment setup failed: ' + err.message);
   }
 }
-
 
 // ===== CHECKOUT FORM SUBMIT =====
 document.getElementById('checkoutForm').addEventListener('submit', function(e) {
