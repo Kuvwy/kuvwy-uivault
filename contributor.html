@@ -501,6 +501,9 @@
 
     // ===== SUBMIT TEMPLATE =====
     document.getElementById('sfSubmitBtn').addEventListener('click', async function() {
+      const errEl = document.getElementById('sfErr');
+      errEl.style.display = 'none';
+    
       const title = document.getElementById('sfTitle').value.trim();
       const category = document.getElementById('sfCategory').value;
       const price = parseInt(document.getElementById('sfPrice').value);
@@ -544,8 +547,7 @@
       const css_content = document.getElementById('sfCss').value;
       const js_content = document.getElementById('sfJs').value;
 
-      const errEl = document.getElementById('sfErr');
-      errEl.style.display = 'none';
+      
 
       if (!title || !category || !price || price < 500 || !description || !html_content) {
         errEl.textContent = 'Please fill in all required fields. Minimum price is ₦500.';
