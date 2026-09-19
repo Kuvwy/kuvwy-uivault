@@ -440,34 +440,43 @@
       await Promise.all([loadMyTemplates(), loadEarnings()]);
     }
 
-    async function loadMyTemplates() {
-     const { data, error } = await sb
-        .from('templates')
-        .select('id, title, category, price, thumbnail_url, created_at, contributor_id')
-        .order('created_at', { ascending: false });
-
-      const list = document.getElementById('myTemplatesList');
-    console.log('Templates query result:', JSON.stringify({error, data}));
-      if (error || !data || data.length === 0) {
-        list.innerHTML = '<div class="empty-state">No templates yet. Submit your first one!</div>';
-        document.getElementById('statTemplates').textContent = '0';
-        return;
+  async function loadMyTemplates() {
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/templates?select=id,title,category,price,thumbnail_url,created_at,contributor_id&contributor_id=eq.${contributorRecord.id}`, {
+      headers: {
+        'apikey': SUPABASE_ANON_KEY,
+        'Authorization': 'Bearer ' + (await sb.auth.getSession()).data.session?.access_token
       }
-
-      document.getElementById('statTemplates').textContent = data.length;
-      list.innerHTML = data.map(t => `
-        <div class="tpl-item">
-          <div class="tpl-thumb">
-            ${t.thumbnail_url ? `<img src="${t.thumbnail_url}" alt="${t.title}" />` : ''}
-          </div>
-          <div class="tpl-info">
-            <div class="tpl-title">${t.title}</div>
-            <div class="tpl-meta">${t.category}</div>
-          </div>
-          <div class="tpl-price">₦${Number(t.price).toLocaleString()}</div>
-        </div>
-      `).join('');
+    });
+    const data = await res.json();
+    const list = document.getElementById('myTemplatesList');
+    if (!data || data.length === 0) {
+      list.innerHTML = '<div class="empty-state">No templates yet. Submit your first one!</div>';
+      document.getElementById('statTemplates').textContent = '0';
+      return;
     }
+    const mine = data.filter(t => t.contributor_id === contributorRecord.id);
+    document.getElementById('statTemplates').textContent = mine.length;
+    if (mine.length === 0) {
+      list.innerHTML = '<div class="empty-state">No templates yet. Submit your first one!</div>';
+      return;
+    }
+    list.innerHTML = mine.map(t => `
+      <div class="tpl-item">
+        <div class="tpl-thumb">
+          ${t.thumbnail_url ? `<img src="${t.thumbnail_url}" alt="${t.title}" />` : ''}
+        </div>
+        <div class="tpl-info">
+          <div class="tpl-title">${t.title}</div>
+          <div class="tpl-meta">${t.category}</div>
+        </div>
+        <div class="tpl-price">₦${Number(t.price).toLocaleString()}</div>
+      </div>
+    `).join('');
+  } catch(err) {
+    document.getElementById('myTemplatesList').innerHTML = '<div class="empty-state">Error loading templates.</div>';
+  }
+  }
 
     async function loadEarnings() {
       const { data, error } = await sb
