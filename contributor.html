@@ -265,14 +265,14 @@
             <input type="text" id="sfTags" placeholder="e.g. dark, modern, saas" />
           </div>
           <div class="form-group">
-            <label>Thumbnail URL</label>
-            <input type="url" id="sfThumbnail" placeholder="https://..." />
-            <div class="file-hint">Host your image on Imgur or any CDN and paste the URL here.</div>
+            <label>Thumbnail Image</label>
+            <input type="file" id="sfThumbnail" accept="image/*" style="padding:10px 14px;border:1px solid var(--border);border-radius:8px;width:100%;font-family:inherit;font-size:0.9rem;background:#fff;" />
+            <div class="file-hint">Upload a screenshot of your template. PNG or JPG recommended.</div>
           </div>
           <div class="form-group">
-            <label>ZIP File URL</label>
-            <input type="url" id="sfFileUrl" placeholder="https://..." />
-            <div class="file-hint">Upload your ZIP to Google Drive (anyone with link can download) and paste the link. Buyers get this after purchase.</div>
+            <label>ZIP File</label>
+            <input type="file" id="sfFileZip" accept=".zip" style="padding:10px 14px;border:1px solid var(--border);border-radius:8px;width:100%;font-family:inherit;font-size:0.9rem;background:#fff;" />
+            <div class="file-hint">Upload your ZIP file directly. Buyers get access after purchase.</div>
           </div>
           <div class="form-group">
             <label>HTML</label>
@@ -507,8 +507,39 @@
       const accent = document.getElementById('sfAccent').value;
       const description = document.getElementById('sfDescription').value.trim();
       const tags = document.getElementById('sfTags').value.split(',').map(t => t.trim()).filter(Boolean);
-      const thumbnail_url = document.getElementById('sfThumbnail').value.trim();
-      const file_url = document.getElementById('sfFileUrl').value.trim();
+      const thumbnailFile = document.getElementById('sfThumbnail').files[0];
+      const zipFile = document.getElementById('sfFileZip').files[0];
+      let uploadedFilePath = null;
+      if (zipFile) {
+        const fileName = `contributor-${contributorRecord.id}-${Date.now()}.zip`;
+        const { data: uploadData, error: uploadError } = await sb.storage
+          .from('websites')
+          .upload(fileName, zipFile, { contentType: 'application/zip', upsert: false });
+        if (uploadError) {
+          errEl.textContent = 'ZIP upload failed: ' + uploadError.message;
+          errEl.style.display = 'block';
+          this.disabled = false;
+          this.textContent = 'Submit Template';
+          return;
+        }
+        uploadedFilePath = uploadData.path;
+      }
+      let thumbnailUrl = null;
+      if (thumbnailFile) {
+        const imgName = `thumbnails/contributor-${contributorRecord.id}-${Date.now()}.${thumbnailFile.name.split('.').pop()}`;
+        const { data: imgData, error: imgError } = await sb.storage
+          .from('websites')
+          .upload(imgName, thumbnailFile, { contentType: thumbnailFile.type, upsert: false });
+        if (imgError) {
+          errEl.textContent = 'Thumbnail upload failed: ' + imgError.message;
+          errEl.style.display = 'block';
+          this.disabled = false;
+          this.textContent = 'Submit Template';
+          return;
+        }
+        const { data: urlData } = sb.storage.from('websites').getPublicUrl(imgData.path);
+        thumbnailUrl = urlData.publicUrl;
+      }
       const html_content = document.getElementById('sfHtml').value;
       const css_content = document.getElementById('sfCss').value;
       const js_content = document.getElementById('sfJs').value;
@@ -533,8 +564,8 @@
           accent,
           description,
           tags,
-          thumbnail_url: thumbnail_url || null,
-          file_path: file_url || null,
+          thumbnail_url: thumbnailUrl || null,
+          file_path: uploadedFilePath || null,
           html_content,
           css_content,
           js_content,
@@ -544,9 +575,12 @@
         if (error) throw error;
         toast('Template submitted and live!');
         // Reset form
-        ['sfTitle','sfDescription','sfTags','sfThumbnail','sfFileUrl','sfHtml','sfCss','sfJs'].forEach(id => {
+        ['sfTitle','sfDescription','sfTags','sfHtml','sfCss','sfJs'].forEach(id => {
+          
           document.getElementById(id).value = '';
         });
+        document.getElementById('sfThumbnail').value = '';
+        document.getElementById('sfFileZip').value = '';
         document.getElementById('sfCategory').value = '';
         document.getElementById('sfPrice').value = '';
         // Switch to templates tab

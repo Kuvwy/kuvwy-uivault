@@ -1052,6 +1052,11 @@ document.getElementById('loginSubmit').addEventListener('click', async function(
       window._pendingTemplate = null;
       proceedToSingleCheckout(t);
     }
+    if (window._pendingContributor) {
+      window._pendingContributor = null;
+      window.location.href = 'contributor.html';
+      return;
+    }
   } catch (err) {
     showAuthError('loginError', err.message || 'Login failed. Check your email and password.');
   } finally {
@@ -1094,6 +1099,11 @@ document.getElementById('signupSubmit').addEventListener('click', async function
         const t = window._pendingTemplate;
         window._pendingTemplate = null;
         proceedToSingleCheckout(t);
+      }
+      if (window._pendingContributor) {
+      window._pendingContributor = null;
+      window.location.href = 'contributor.html';
+      return;
       }
     } else {
       showAuthError('signupError', 'Check your email to confirm your account, then log in.');
@@ -1550,6 +1560,13 @@ document.getElementById('freeGrid').innerHTML = `
     renderGrid();
   }
 }
+    function handleContributorClick(e) {
+  if (!currentUser) {
+    e.preventDefault();
+    window._pendingContributor = true;
+    openAuthModal('login');
+  }
+    }
 /* ============================================================
    UI VAULT — SCRIPT — PART 12
    Final Kick-off
