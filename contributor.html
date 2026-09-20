@@ -340,11 +340,18 @@
 
     // ===== LOAD STATE =====
     async function loadContributorState() {
-      const { data, error } = await sb
-        .from('contributors')
-        .select('*')
-        .eq('user_id', currentUser.id)
-        .maybeSingle();
+      const { data: sessionData } = await sb.auth.getSession();
+const token = sessionData.session?.access_token || SUPABASE_ANON_KEY;
+
+const res = await fetch(`${SUPABASE_URL}/rest/v1/contributors?select=*&user_id=eq.${currentUser.id}`, {
+  headers: {
+    'apikey': SUPABASE_ANON_KEY,
+    'Authorization': 'Bearer ' + token
+  }
+});
+const rows = await res.json();
+const data = rows?.[0] || null;
+const error = null;
 
       if (error) { toast('Error loading profile'); return; }
 
@@ -442,26 +449,27 @@
 
   async function loadMyTemplates() {
   try {
+    const { data: sessionData } = await sb.auth.getSession();
+    const token = sessionData.session?.access_token || SUPABASE_ANON_KEY;
+    
     const res = await fetch(`${SUPABASE_URL}/rest/v1/templates?select=id,title,category,price,thumbnail_url,created_at,contributor_id&contributor_id=eq.${contributorRecord.id}`, {
       headers: {
         'apikey': SUPABASE_ANON_KEY,
-        'Authorization': 'Bearer ' + (await sb.auth.getSession()).data.session?.access_token
+        'Authorization': 'Bearer ' + token
       }
     });
+
     const data = await res.json();
     const list = document.getElementById('myTemplatesList');
-    if (!data || data.length === 0) {
+
+    if (!Array.isArray(data) || data.length === 0) {
       list.innerHTML = '<div class="empty-state">No templates yet. Submit your first one!</div>';
       document.getElementById('statTemplates').textContent = '0';
       return;
     }
-    const mine = data.filter(t => t.contributor_id === contributorRecord.id);
-    document.getElementById('statTemplates').textContent = mine.length;
-    if (mine.length === 0) {
-      list.innerHTML = '<div class="empty-state">No templates yet. Submit your first one!</div>';
-      return;
-    }
-    list.innerHTML = mine.map(t => `
+
+    document.getElementById('statTemplates').textContent = data.length;
+    list.innerHTML = data.map(t => `
       <div class="tpl-item">
         <div class="tpl-thumb">
           ${t.thumbnail_url ? `<img src="${t.thumbnail_url}" alt="${t.title}" />` : ''}
@@ -474,7 +482,7 @@
       </div>
     `).join('');
   } catch(err) {
-    document.getElementById('myTemplatesList').innerHTML = '<div class="empty-state">Error loading templates.</div>';
+    document.getElementById('myTemplatesList').innerHTML = `<div class="empty-state">Error: ${err.message}</div>`;
   }
   }
 
