@@ -354,6 +354,7 @@ const data = rows?.[0] || null;
 const error = null;
 
       if (error) { toast('Error loading profile'); return; }
+      
 
       if (!data) {
         document.getElementById('onboardingSection').style.display = 'block';
@@ -363,6 +364,7 @@ const error = null;
       }
 
       contributorRecord = data;
+      alert('Contributor ID: ' + JSON.stringify(data));
       console.log('Contributor record:', JSON.stringify(data));
       document.getElementById('onboardingSection').style.display = 'none';
       document.getElementById('authWall').style.display = 'none';
