@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Legal — UIVault by Kuvwy</title>
+  <link rel="icon" type="image/png" href="kuvwy_vibrant_flat.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Playfair+Display:wght@700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root { --orange: #d97706; --navy: #1a3a5c; --text: #050505; --muted: #71717a; --border: #e4e4e7; --bg: #f9f9f7; }
+    body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; }
+    .nav { display: flex; align-items: center; justify-content: space-between; padding: 16px 24px; background: #fff; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
+    .nav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--text); font-weight: 600; font-size: 1rem; }
+    .nav-logo img { height: 32px; }
+    .nav-back { font-size: 0.85rem; color: var(--muted); text-decoration: none; }
+    .nav-back:hover { color: var(--orange); }
+    .container { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .tabs { display: flex; gap: 4px; background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 4px; margin-bottom: 40px; }
+    .tab { flex: 1; text-align: center; padding: 10px; border-radius: 8px; font-size: 0.9rem; font-weight: 500; cursor: pointer; border: none; background: none; color: var(--muted); transition: all 0.2s; }
+    .tab.active { background: var(--orange); color: #fff; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    h1 { font-family: 'Playfair Display', serif; font-size: 2rem; margin-bottom: 8px; }
+    .last-updated { font-size: 0.82rem; color: var(--muted); margin-bottom: 40px; }
+    h2 { font-size: 1.1rem; font-weight: 600; margin: 32px 0 10px; color: var(--navy); }
+    p { margin-bottom: 16px; font-size: 0.95rem; color: #333; }
+    ul { margin: 0 0 16px 20px; }
+    ul li { font-size: 0.95rem; color: #333; margin-bottom: 6px; }
+    .highlight { background: #fff7ed; border-left: 3px solid var(--orange); padding: 14px 18px; border-radius: 0 8px 8px 0; margin-bottom: 20px; font-size: 0.9rem; }
+    .footer { text-align: center; margin-top: 60px; font-size: 0.82rem; color: var(--muted); }
+    a { color: var(--orange); }
+  </style>
+</head>
+<body>
+  <nav class="nav">
+    <a class="nav-logo" href="/">
+      <img src="kuvwy_vibrant_flat.png" alt="Kuvwy" />
+      UIVault
+    </a>
+    <a class="nav-back" href="/">← Back to UIVault</a>
+  </nav>
+
+  <div class="container">
+    <div class="tabs">
+      <button class="tab active" data-tab="terms">Terms of Service</button>
+      <button class="tab" data-tab="privacy">Privacy Policy</button>
+      <button class="tab" data-tab="refund">Refund Policy</button>
+    </div>
+    <!-- TERMS -->
+    <div class="tab-content active" id="terms">
+      <h1>Terms of Service</h1>
+      <p class="last-updated">Last updated: September 2026</p>
+      <div class="highlight">By using UIVault, you agree to these terms. Please read them carefully before making a purchase.</div>
+
+      <h2>1. About UIVault</h2>
+      <p>UIVault is a digital template marketplace operated by Kuvwy. We provide website templates and UI components for developers, designers, and businesses.</p>
+
+      <h2>2. Purchases</h2>
+      <p>All purchases on UIVault are for digital products. Upon successful payment via Paystack, you will receive immediate access to download your purchased templates.</p>
+      <ul>
+        <li>Prices are listed in Nigerian Naira (₦)</li>
+        <li>Payment is processed securely via Paystack</li>
+        <li>You will receive access to your purchases in your profile</li>
+        <li>We do not store your card details</li>
+      </ul>
+
+      <h2>3. License</h2>
+      <p>When you purchase a template from UIVault, you receive a non-exclusive, non-transferable license to use the template for personal or commercial projects. You may not:</p>
+      <ul>
+        <li>Resell or redistribute the template files</li>
+        <li>Claim the template as your own original work</li>
+        <li>Share your download with others who have not purchased it</li>
+        <li>Use the template to create competing template marketplaces</li>
+      </ul>
+
+      <h2>4. Free Templates</h2>
+      <p>Free templates are provided as-is with no guarantees. The same license restrictions apply — you may not resell or redistribute free templates.</p>
+
+      <h2>5. Contributor Templates</h2>
+      <p>Some templates on UIVault are submitted by third-party contributors. Kuvwy reviews but does not guarantee the quality of contributor templates. Contributors retain ownership of their work.</p>
+
+      <h2>6. Accounts</h2>
+      <p>Your account is secured through Supabase authentication. You are responsible for keeping your login credentials confidential and not sharing access with others. If you suspect unauthorized access, contact us immediately at <a href="mailto:kuvwiebrume273@gmail.com">kuvwiebrume273@gmail.com</a></p>
+
+      <h2>7. Limitation of Liability</h2>
+      <p>UIVault templates are provided "as is." Kuvwy is not liable for any damages arising from the use of our templates, including but not limited to lost revenue or data loss.</p>
+
+      <h2>8. Changes to Terms</h2>
+      <p>We may update these terms at any time. Continued use of UIVault after changes constitutes acceptance of the new terms.</p>
+
+      <h2>9. Contact</h2>
+      <p>For questions about these terms, contact us at <a href="mailto:kuvwiebrume273@gmail.com">kuvwiebrume273@gmail.com</a></p>
+    </div>
+    <!-- PRIVACY -->
+    <div class="tab-content" id="privacy">
+      <h1>Privacy Policy</h1>
+      <p class="last-updated">Last updated: September 2026</p>
+      <div class="highlight">We respect your privacy. This policy explains what data we collect and how we use it.</div>
+
+      <h2>1. Data We Collect</h2>
+      <ul>
+        <li>Email address (for account creation and login)</li>
+        <li>Purchase history (to give you access to your templates)</li>
+        <li>Payment reference numbers (for transaction verification)</li>
+      </ul>
+      <p>We do not collect or store your card details. All payment processing is handled by Paystack.</p>
+
+      <h2>2. How We Use Your Data</h2>
+      <ul>
+        <li>To create and manage your account</li>
+        <li>To process and verify your purchases</li>
+        <li>To send transactional emails (purchase confirmations, password resets)</li>
+        <li>To improve UIVault</li>
+      </ul>
+
+      <h2>3. Data Storage</h2>
+      <p>Your data is stored securely using Supabase, hosted on secure servers. We do not sell your data to third parties.</p>
+
+      <h2>4. Cookies</h2>
+      <p>UIVault uses authentication session cookies to keep you logged in. No advertising or tracking cookies are used.</p>
+
+      <h2>5. Third Parties</h2>
+      <p>We use the following third-party services:</p>
+      <ul>
+        <li><strong>Supabase</strong> — database and authentication</li>
+        <li><strong>Paystack</strong> — payment processing</li>
+        <li><strong>Vercel</strong> — website hosting</li>
+      </ul>
+
+      <h2>6. Your Rights</h2>
+      <p>You can request deletion of your account and data at any time by emailing <a href="mailto:kuvwiebrume273@gmail.com">kuvwiebrume273@gmail.com</a></p>
+
+      <h2>7. Contact</h2>
+      <p>Privacy questions? Email us at <a href="mailto:kuvwiebrume273@gmail.com">kuvwiebrume273@gmail.com</a></p>
+    </div>
+
+    <!-- REFUND -->
+    <div class="tab-content" id="refund">
+      <h1>Refund Policy</h1>
+      <p class="last-updated">Last updated: September 2026</p>
+      <div class="highlight">We offer a 3–10 day money-back guarantee on all premium template purchases.</div>
+
+      <h2>Eligibility</h2>
+      <p>You are eligible for a full refund if:</p>
+      <ul>
+        <li>You request it within 10 days of purchase</li>
+        <li>The template has a major technical issue we cannot fix</li>
+        <li>You were charged but did not receive access to your purchase</li>
+      </ul>
+
+      <h2>Not Eligible</h2>
+      <ul>
+        <li>Change of mind after downloading</li>
+        <li>Free templates (no payment was made)</li>
+        <li>Requests made after 10 days of purchase</li>
+      </ul>
+
+      <h2>How to Request</h2>
+      <p>Email  <a href="mailto:kuvwiebrume273@gmail.com" style="color:#d97706;text-decoration:none;">Contact Us</a> with your purchase reference number and reason. We will process your refund within 3–5 business days.</p>
+    </div>
+
+    <div class="footer">
+      <p>&copy; 2026 Kuvwy · All rights reserved · <a href="/">UIVault</a></p>
+    </div>
+  </div>
+
+  <script>
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', function() {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        this.classList.add('active');
+        document.getElementById(this.dataset.tab).classList.add('active');
+      });
+    });
+  </script>
+</body>
+</html>
